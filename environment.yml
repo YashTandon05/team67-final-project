@@ -1,0 +1,61 @@
+name: goes2go
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.11
+  - pip
+  - git
+  - rclone >= 1.58.0 # Not required by goes2go, but is an awesome alternative https://rclone.org/
+
+  # -----
+  # Tools
+  # -----
+  - cartopy
+  - geopandas
+  - goes2go
+  - h5netcdf
+  - jupyter
+  - jupyterlab
+  - matplotlib
+  - metpy
+  - netcdf4
+  - numpy
+  - pandas
+  - s3fs>=2023.6.0
+  - toml
+  - xarray
+
+  # -------------------
+  # Formatter & Testing
+  # -------------------
+  - ruff
+  - black
+  - black-jupyter
+  - isort
+  - pytest
+
+  - pip:
+      # Borrow some tools from my garage
+      - git+https://github.com/blaylockbk/Carpenter_Workshop.git
+###############################################################################
+#
+# Note: Being more specific with versions *may* help speed up conda
+# creating/updating environments
+# https://www.anaconda.com/blog/understanding-and-improving-condas-performance
+#
+###############################################################################
+#
+# To create this environment
+#
+#     wget https://github.com/blaylockbk/goes2go/raw/main/environment.yml
+#     conda env create -f environment.yml
+#
+# To update this environment
+#
+#     conda env update -f environment.yml --prune
+#
+# To remove this environment
+#
+#     conda env remove --name environment
+#
+###############################################################################
