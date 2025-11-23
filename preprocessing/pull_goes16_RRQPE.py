@@ -1,10 +1,11 @@
-import json
 import datetime as dt
-import numpy as np
+import json
+from pathlib import Path
 
+import cartopy.crs as ccrs
+import numpy as np
 from goes2go import goes_nearesttime
 from goes2go.tools import abi_crs
-import cartopy.crs as ccrs
 
 # ============================================================
 # User options
@@ -13,18 +14,22 @@ satellite = 16
 product = "ABI-L2-RRQPEF"
 domain = "C"
 
-start = dt.datetime(2024, 1, 1)
-end = dt.datetime(2024, 1, 2)
+start = dt.datetime(2024, 10, 7)
+end = dt.datetime(2025, 1, 1)
 
 sample_times = [dt.time(0, 0), dt.time(12, 0)]
 
 output = []
+
+path = Path("../lib/RRQPE_2024_12hr.ndjson")
+path.parent.mkdir(parents=True, exist_ok=True)
 
 # ============================================================
 # Extraction loop
 # ============================================================
 current = start
 while current < end:
+    print(f"Processing date: {current.date()}")
     for t in sample_times:
         target_dt = dt.datetime(
             current.year, current.month, current.day, t.hour, t.minute
@@ -53,7 +58,7 @@ while current < end:
         lons = a[:, :, 0]
 
         # mask for positive values
-        mask = q > 0.1  # mm/hr threshold
+        mask = q > 2.5  # mm/hr threshold, considered moderate rain
         if not np.any(mask):
             print(f"No rain at {target_dt}")
             continue
@@ -63,23 +68,26 @@ while current < end:
         lon_vals = lons[mask].tolist()
         q_vals = q[mask].tolist()
 
+        # downsample
+        lat_vals = lat_vals[::10]
+        lon_vals = lon_vals[::10]
+        q_vals = q_vals[::10]
+
+        # individual json entry
         entry = {
             "datetime": QPE.t.dt.strftime("%Y-%m-%dT%H:%M:%SZ").item(),
-            "points": [
-                {"lat": lat_vals[i], "lon": lon_vals[i], "RRQPE": q_vals[i]}
-                for i in range(len(q_vals))
-            ],
+            "lon": lon_vals,
+            "lat": lat_vals,
+            "RRQPE": q_vals,
         }
 
         output.append(entry)
         print(f"Collected {entry['datetime']} ({len(q_vals)} rainy pixels)")
 
-    current += dt.timedelta(days=1)
+        with open("../lib/RRQPE_2024_12hr.ndjson", "a") as f:
+            json.dump(entry, f)
+            f.write("\n")
 
-# ============================================================
-# Save JSON
-# ============================================================
-with open("./lib/RRQPE_2024_12hr_filtered.json", "w") as f:
-    json.dump(output, f)
+    current += dt.timedelta(days=1)
 
 print("Done.")
