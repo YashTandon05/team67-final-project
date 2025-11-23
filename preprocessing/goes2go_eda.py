@@ -10,7 +10,7 @@ import datetime as dt
 satellite = 16  # for GOES-16 (East)
 QPE_product_code = "ABI-L2-RRQPEF"
 domain = "C"
-date = "2024-10-09"
+date = "2024-01-01"
 
 QPE = goes_nearesttime(date, product=QPE_product_code, domain=domain)
 crs, x, y = abi_crs(QPE, "RRQPE")
