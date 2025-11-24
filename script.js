@@ -7,7 +7,11 @@ const svg = d3
   .attr("viewBox", `0 0 ${width} ${height}`)
   .attr("preserveAspectRatio", "xMidYMid meet");
 
-const projection = d3.geoOrthographic().scale(width * 0.45).translate([width / 2, height / 2]).clipAngle(90);
+let currentScale = width * 0.45;
+const minScale = width * 0.2;
+const maxScale = width * 1.5;
+
+const projection = d3.geoOrthographic().scale(currentScale).translate([width / 2, height / 2]).clipAngle(90);
 const path = d3.geoPath(projection);
 const graticule = d3.geoGraticule();
 
@@ -32,12 +36,6 @@ let lastDragTime = null;
 let lastDragX = null;
 let lastTime = Date.now();
 
-function redraw() {
-  svg.selectAll(".sphere").attr("d", path);
-  svg.selectAll(".graticule").attr("d", path);
-  landGroup.selectAll("path.land").attr("d", path);
-}
-
 const drag = d3.drag().on("start", (event) => {
     isDragging = true;
     svg.classed("dragging", true);
@@ -48,7 +46,7 @@ const drag = d3.drag().on("start", (event) => {
   })
   .on("drag", (event) => {
     const rotate = projection.rotate();
-    const k = 0.25;
+    const k = 0.1;
 
     const newLambda = rotate[0] + event.dx * k;
     const newPhi = rotate[1] - event.dy * k;
@@ -68,12 +66,26 @@ const drag = d3.drag().on("start", (event) => {
     isDragging = false;
     svg.classed("dragging", false);
 
-    const maxInertiaSpeed = 1; 
+    const maxInertiaSpeed = 0.1; 
     if (inertiaRotationSpeed > maxInertiaSpeed) inertiaRotationSpeed = maxInertiaSpeed;
     if (inertiaRotationSpeed < -maxInertiaSpeed) inertiaRotationSpeed = -maxInertiaSpeed;
   });
 
 svg.call(drag);
+
+// Add zoom functionality with mouse wheel
+svg.on("wheel", function(event) {
+  event.preventDefault();
+  
+  const delta = event.deltaY;
+  const zoomFactor = delta > 0 ? 0.9 : 1.1;
+  
+  currentScale *= zoomFactor;
+  currentScale = Math.max(minScale, Math.min(maxScale, currentScale));
+  
+  projection.scale(currentScale);
+  redraw();
+});
 
 d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json")
   .then((world) => {
@@ -89,6 +101,12 @@ d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json")
   })
   .catch((error) => console.error("Map load error:", error));
 
+
+function redraw() {
+    svg.selectAll(".sphere").attr("d", path);
+    svg.selectAll(".graticule").attr("d", path);
+    landGroup.selectAll("path.land").attr("d", path);
+}
 
 function animate() {
   lastTime = Date.now();
@@ -112,3 +130,49 @@ function animate() {
     }
   });
 }
+
+
+// Time slider functionality
+const startDate = new Date(2024, 0, 1);
+const endDate = new Date(2024, 11, 31);
+const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+const totalSteps = totalDays * 2;
+
+function formatDate(date) {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
+function formatTime(date) {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+function getDateFromStep(stepIndex) {
+  const dayIndex = Math.floor(stepIndex / 2);
+  const hourOffset = (stepIndex % 2) * 12;
+  const date = new Date(startDate);
+  date.setDate(date.getDate() + dayIndex);
+  date.setHours(hourOffset, 0, 0, 0);
+  return date;
+}
+
+function updateTimeDisplay(stepIndex) {
+  const date = getDateFromStep(stepIndex);
+  document.getElementById("current-date").textContent = formatDate(date);
+  document.getElementById("current-time").textContent = formatTime(date);
+}
+
+const timeSlider = document.getElementById("time-slider");
+timeSlider.max = totalSteps - 1;
+
+timeSlider.addEventListener("input", (e) => {
+  const stepIndex = parseInt(e.target.value);
+  updateTimeDisplay(stepIndex);
+});
+
+updateTimeDisplay(0);

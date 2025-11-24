@@ -13,12 +13,33 @@
     <main>
         <header>
             <h1>What does a hurricane look like?</h1>
-            <p>Interactive data visualization to explore past hurricanes and learn about emerging patterns in hurricane development.</p>
+            <p>Interactive data visualization to explore major hurricanes in 2024 and learn about emerging patterns in hurricane development.</p>
         </header>
     
         <section id="viz-wrapper">
             <div id="globe-container">
                 <!-- SVG will be injected here by script.js -->
+            </div>
+            <div id="text-section">
+                <div class="text-content">
+                    <h2>Welcome to Hurricane Visualization</h2>
+                    <p>Scroll to explore the story of hurricanes in 2024 and their impact on our planet.</p>
+                    <p>Use your mouse to rotate and zoom the globe to see rainfall patterns from GOES satellite data.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="time-controls">
+            <div id="time-display">
+                <div id="current-date">January 1, 2024</div>
+                <div id="current-time">00:00</div>
+            </div>
+            <div id="slider-container">
+                <input type="range" id="time-slider" min="0" max="365" value="0" step="1">
+                <div id="slider-labels">
+                    <span>Jan 1, 2024</span>
+                    <span>Dec 31, 2024</span>
+                </div>
             </div>
         </section>
     </main>
