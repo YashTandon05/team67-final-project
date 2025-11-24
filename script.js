@@ -1,5 +1,13 @@
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
+import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm";
+import { preload12hRRQPE, times12Hr } from "./rrqpe12hr.js";
+
+// globals
 const width = 700;
 const height = 700;
+let rrqpeData12h;
+let currDateTime;
+let currFrameIndex = 0;
 
 const svg = d3
   .select("#globe-container")
@@ -11,7 +19,11 @@ let currentScale = width * 0.45;
 const minScale = width * 0.2;
 const maxScale = width * 1.5;
 
-const projection = d3.geoOrthographic().scale(currentScale).translate([width / 2, height / 2]).clipAngle(90);
+const projection = d3
+  .geoOrthographic()
+  .scale(currentScale)
+  .translate([width / 2, height / 2])
+  .clipAngle(90);
 const path = d3.geoPath(projection);
 const graticule = d3.geoGraticule();
 
@@ -27,7 +39,6 @@ svg
   .attr("class", "graticule")
   .attr("d", path);
 
-
 const landGroup = svg.append("g").attr("class", "land-group");
 let isDragging = false;
 let inertiaRotationSpeed = 0;
@@ -36,7 +47,9 @@ let lastDragTime = null;
 let lastDragX = null;
 let lastTime = Date.now();
 
-const drag = d3.drag().on("start", (event) => {
+const drag = d3
+  .drag()
+  .on("start", (event) => {
     isDragging = true;
     svg.classed("dragging", true);
 
@@ -66,23 +79,25 @@ const drag = d3.drag().on("start", (event) => {
     isDragging = false;
     svg.classed("dragging", false);
 
-    const maxInertiaSpeed = 0.1; 
-    if (inertiaRotationSpeed > maxInertiaSpeed) inertiaRotationSpeed = maxInertiaSpeed;
-    if (inertiaRotationSpeed < -maxInertiaSpeed) inertiaRotationSpeed = -maxInertiaSpeed;
+    const maxInertiaSpeed = 0.1;
+    if (inertiaRotationSpeed > maxInertiaSpeed)
+      inertiaRotationSpeed = maxInertiaSpeed;
+    if (inertiaRotationSpeed < -maxInertiaSpeed)
+      inertiaRotationSpeed = -maxInertiaSpeed;
   });
 
 svg.call(drag);
 
 // Add zoom functionality with mouse wheel
-svg.on("wheel", function(event) {
+svg.on("wheel", function (event) {
   event.preventDefault();
-  
+
   const delta = event.deltaY;
   const zoomFactor = delta > 0 ? 0.9 : 1.1;
-  
+
   currentScale *= zoomFactor;
   currentScale = Math.max(minScale, Math.min(maxScale, currentScale));
-  
+
   projection.scale(currentScale);
   redraw();
 });
@@ -91,7 +106,8 @@ d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json")
   .then((world) => {
     const land = topojson.feature(world, world.objects.land);
 
-    landGroup.selectAll("path")
+    landGroup
+      .selectAll("path")
       .data([land])
       .join("path")
       .attr("class", "land")
@@ -101,11 +117,10 @@ d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json")
   })
   .catch((error) => console.error("Map load error:", error));
 
-
 function redraw() {
-    svg.selectAll(".sphere").attr("d", path);
-    svg.selectAll(".graticule").attr("d", path);
-    landGroup.selectAll("path.land").attr("d", path);
+  svg.selectAll(".sphere").attr("d", path);
+  svg.selectAll(".graticule").attr("d", path);
+  landGroup.selectAll("path.land").attr("d", path);
 }
 
 function animate() {
@@ -131,48 +146,66 @@ function animate() {
   });
 }
 
+// Initialize RRQPE visualization
 
-// Time slider functionality
-const startDate = new Date(2024, 0, 1);
-const endDate = new Date(2024, 11, 31);
-const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-const totalSteps = totalDays * 2;
+// slider and scroller functionality
+function initTimeSlider(numFrames) {
+  const slider = document.getElementById("time-slider");
 
-function formatDate(date) {
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  // slider should map (-) frames
+  slider.min = 0;
+  slider.max = numFrames - 1;
+  slider.step = 1;
+  slider.value = 0;
+
+  slider.addEventListener("input", (e) => {
+    const idx = Number(e.target.value);
+    onFrameChange(idx);
+  });
 }
 
-function formatTime(date) {
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+function formatDate(dt) {
+  const year = dt.getUTCFullYear();
+  const monthName = dt.toLocaleString("en-US", {
+    month: "long",
+    timeZone: "UTC",
+  });
+  const day = String(dt.getUTCDate()).padStart(2, "0");
+  return `${monthName} ${day}, ${year}`;
 }
 
-function getDateFromStep(stepIndex) {
-  const dayIndex = Math.floor(stepIndex / 2);
-  const hourOffset = (stepIndex % 2) * 12;
-  const date = new Date(startDate);
-  date.setDate(date.getDate() + dayIndex);
-  date.setHours(hourOffset, 0, 0, 0);
-  return date;
+function onFrameChange(idx) {
+  currFrameIndex = idx;
+
+  const frame = rrqpeData12h[idx];
+
+  // Update globally-tracked datetime
+  currDateTime = new Date(frame.datetime);
+  document.getElementById("time-slider").value = idx;
+
+  document.getElementById("current-date").textContent =
+    formatDate(currDateTime);
+
+  document.getElementById("current-time").textContent = `${String(
+    currDateTime.getUTCHours()
+  ).padStart(2, "0")}:00`;
 }
 
-function updateTimeDisplay(stepIndex) {
-  const date = getDateFromStep(stepIndex);
-  document.getElementById("current-date").textContent = formatDate(date);
-  document.getElementById("current-time").textContent = formatTime(date);
+async function init() {
+  rrqpeData12h = await preload12hRRQPE();
+
+  const overlay = document.getElementById("loading-overlay");
+  overlay.classList.add("hidden");
+
+  // Initialize the global timestamp
+  currFrameIndex = 0;
+  currDateTime = new Date(rrqpeData12h[0].datetime);
+
+  // Build the slider with the correct range
+  initTimeSlider(rrqpeData12h.length);
+
+  // Initial render
+  onFrameChange(0);
 }
 
-const timeSlider = document.getElementById("time-slider");
-timeSlider.max = totalSteps - 1;
-
-timeSlider.addEventListener("input", (e) => {
-  const stepIndex = parseInt(e.target.value);
-  updateTimeDisplay(stepIndex);
-});
-
-updateTimeDisplay(0);
+init();
