@@ -1,6 +1,3 @@
-import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
-import scrollama from "https://cdn.jsdelivr.net/npm/scrollama@3.2.0/+esm";
-
 // globals
 const path = "data/dev/"; // ! NOTE: change to full data path after development
 const timeStrings = ["00", "12"];

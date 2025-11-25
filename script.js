@@ -1,16 +1,20 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm";
-import { preload12hRRQPE, times12Hr } from "./rrqpe12hr.js";
+import scrollama from "https://cdn.jsdelivr.net/npm/scrollama@3.2.0/+esm";
+import { preload12hRRQPE } from "./rrqpe12hr.js";
 
 // globals to track
 let rrqpeData12h = null;
 let currDateTime = null;
-let currFrame = null;
 let currFrameidx = 0;
 
+// globe rendering variables
 let svg, canvas, ctx, projection, path, graticule, landGroup, globeContainer;
 let width, height;
+let rrqpeMax, rrqpeMin;
 
+// interaction state variables
+let scroller = null;
 let currentScale;
 let minScale;
 let maxScale;
@@ -29,7 +33,6 @@ function initGlobe(world) {
   width = rect.width;
   height = rect.height;
 
-  // Now that width/height are defined, compute scale and bounds
   currentScale = width * 0.45;
   minScale = width * 0.2;
   maxScale = width * 1.5;
@@ -85,6 +88,10 @@ function initGlobe(world) {
     .join("path")
     .attr("class", "land")
     .attr("d", path);
+
+  // track whether the pointer is over the visualization (svg/canvas)
+  globeContainer.on("pointerenter", () => (window.__pointerOverViz = true));
+  globeContainer.on("pointerleave", () => (window.__pointerOverViz = false));
 }
 
 function initDragZoom() {
@@ -204,7 +211,9 @@ function renderRRQPEFrame(frame) {
     if (x < -10 || x >= width + 10 || y < -10 || y >= height + 10) continue;
 
     ctx.globalAlpha = 0.9;
-    ctx.fillStyle = d3.interpolateTurbo(Math.min(1, Math.max(0, (v - 1) / 99)));
+    ctx.fillStyle = d3.interpolateTurbo(
+      d3.scaleLinear().domain([rrqpeMin, rrqpeMax]).clamp(true)(v)
+    );
     ctx.fillRect(x, y, pointSize, pointSize);
   }
 }
@@ -230,6 +239,53 @@ function initTimeSlider(numFrames) {
     const idx = Number(e.target.value);
     onFrameChange(idx);
   });
+}
+
+// ---------- Scrollama + wheel-to-slider wiring ----------
+function initScrollama(numFrames) {
+  scroller = scrollama();
+
+  // Use the main viz wrapper as the single scroll step and watch progress
+  scroller
+    .setup({ step: "#viz-wrapper", offset: 0.5, progress: true })
+    .onStepEnter((resp) => {
+      // if pointer is over the visualization, don't advance steps via scroll
+      if (window.__pointerOverViz) return;
+      // Map progress (0..1) to frame index
+      const mapped = Math.floor((resp.progress || 0) * (numFrames - 1));
+      if (mapped !== currFrameidx) onFrameChange(mapped);
+    })
+    .onStepProgress((resp) => {
+      if (window.__pointerOverViz) return;
+      const mapped = Math.floor((resp.progress || 0) * (numFrames - 1));
+      if (mapped !== currFrameidx) onFrameChange(mapped);
+    });
+
+  window.addEventListener("resize", () => scroller.resize());
+}
+
+// wheel -> slider mapping on the globe container for fine control (throttled)
+let wheelCooldown = false;
+function initWheelToSlider() {
+  const node = window;
+  node.addEventListener(
+    "wheel",
+    (e) => {
+      // if the user's pointer is over the visualization, do not change frames
+      if (window.__pointerOverViz) return;
+
+      if (wheelCooldown) return;
+      wheelCooldown = true;
+      setTimeout(() => (wheelCooldown = false), 80); // small throttle
+
+      const delta = Math.sign(e.deltaY);
+      let target = currFrameidx + delta;
+      target = Math.max(0, Math.min(target, rrqpeData12h.length - 1));
+      if (target !== currFrameidx) onFrameChange(target);
+    },
+    // passive true keeps native page scroll behavior when not blocked
+    { passive: true }
+  );
 }
 
 function formatDate(dt) {
@@ -262,8 +318,10 @@ function onFrameChange(idx) {
 }
 
 async function init() {
+  // loading overlay
   const overlay = document.getElementById("loading-overlay");
 
+  // data loading
   const [world, rrqpe] = await Promise.all([
     d3.json(
       "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json"
@@ -271,18 +329,28 @@ async function init() {
     preload12hRRQPE(),
   ]);
 
+  rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
+  rrqpeMin = d3.min(rrqpe, (d) => d3.min(d.vals));
+
   rrqpeData12h = rrqpe;
   currFrameidx = 0;
-  currFrame = rrqpeData12h[currFrameidx];
   currDateTime = new Date(rrqpeData12h[0].datetime);
 
+  // globe + canvas init
   initGlobe(world);
   initDragZoom();
+
+  // slider
   initTimeSlider(rrqpeData12h.length);
+
+  // wire scroll wheel/scrollama after slider is configured
+  initScrollama(rrqpeData12h.length);
+  initWheelToSlider();
 
   // Hide loading overlay immediately
   overlay.classList.add("hidden");
 
+  // initial render
   redraw();
   animate();
 }

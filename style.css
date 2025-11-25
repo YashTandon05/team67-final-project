@@ -144,6 +144,7 @@ header p {
   background: rgba(10, 26, 46, 0.3);
   border-radius: 8px;
   max-width: 800px;
+  max-height: 120px;
   margin-left: auto;
   margin-right: auto;
 }
