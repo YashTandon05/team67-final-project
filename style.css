@@ -82,6 +82,11 @@ header p {
   min-width: 300px;
   max-width: 500px;
   padding: 20px;
+  /* no max-height / overflow so text flows down the page */
+  background: rgba(10, 26, 46, 0.6);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
 .text-content h2 {
@@ -115,6 +120,12 @@ header p {
   cursor: grab;
 }
 
+#globe-container {
+  position: sticky;
+  top: 140px; /* leaves room for header + time slider */
+  z-index: 10;
+}
+
 #globe-container svg.dragging {
   cursor: grabbing;
 }
@@ -140,13 +151,17 @@ header p {
 /* Time slider */
 #time-controls {
   margin-top: 40px;
+  margin-bottom: 40px;
   padding: 15px;
-  background: rgba(10, 26, 46, 0.3);
+  background: rgba(10, 26, 46, 1);
   border-radius: 8px;
   max-width: 800px;
-  max-height: 120px;
+  max-height: 150px;
   margin-left: auto;
   margin-right: auto;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 #time-display {
@@ -165,7 +180,7 @@ header p {
   font-size: 1.2rem;
   font-weight: 400;
   color: #3bb5a0;
-  opacity: 0.9;
+  opacity: 1;
 }
 
 #slider-container {
@@ -205,5 +220,4 @@ header p {
   justify-content: space-between;
   margin-top: 8px;
   font-size: 0.85rem;
-  opacity: 0.7;
 }

@@ -1,6 +1,5 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm";
-import scrollama from "https://cdn.jsdelivr.net/npm/scrollama@3.2.0/+esm";
 import { preload12hRRQPE } from "./rrqpe12hr.js";
 
 // globals to track
@@ -14,7 +13,6 @@ let width, height;
 let rrqpeMax, rrqpeMin;
 
 // interaction state variables
-let scroller = null;
 let currentScale;
 let minScale;
 let maxScale;
@@ -27,7 +25,8 @@ let lastDragX = null;
 let lastTime = Date.now();
 
 function initGlobe(world) {
-  globeContainer = d3.select("#globe-container").style("position", "relative");
+  // let CSS control positioning (sticky) for the globe container
+  globeContainer = d3.select("#globe-container");
   const rect = globeContainer.node().getBoundingClientRect();
 
   width = rect.width;
@@ -62,7 +61,7 @@ function initGlobe(world) {
   projection = d3
     .geoOrthographic()
     .scale(currentScale)
-    .translate([width / 2, height / 2])
+    .translate([width / 2, height / 2]).rotate([80, 0])
     .clipAngle(90);
 
   path = d3.geoPath(projection);
@@ -165,9 +164,9 @@ function animate() {
       projection.rotate([newLambda, rotate[1], rotate[2] || 0]);
       redraw();
 
-      const decay = 0.94;
+      const decay = 0.7;
       inertiaRotationSpeed *= decay;
-      if (Math.abs(inertiaRotationSpeed) < 0.00001) {
+      if (Math.abs(inertiaRotationSpeed) < 0.001) {
         inertiaRotationSpeed = 0;
       }
     }
@@ -241,52 +240,27 @@ function initTimeSlider(numFrames) {
   });
 }
 
-// ---------- Scrollama + wheel-to-slider wiring ----------
-function initScrollama(numFrames) {
-  scroller = scrollama();
+// ---------- Page scroll -> slider wiring ----------
+function initScrollToSlider(numFrames) {
+  const onScroll = () => {
+    const doc = document.documentElement;
+    const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
+    const scrollHeight = (doc.scrollHeight || 0) - window.innerHeight;
 
-  // Use the main viz wrapper as the single scroll step and watch progress
-  scroller
-    .setup({ step: "#viz-wrapper", offset: 0.5, progress: true })
-    .onStepEnter((resp) => {
-      // if pointer is over the visualization, don't advance steps via scroll
-      if (window.__pointerOverViz) return;
-      // Map progress (0..1) to frame index
-      const mapped = Math.floor((resp.progress || 0) * (numFrames - 1));
-      if (mapped !== currFrameidx) onFrameChange(mapped);
-    })
-    .onStepProgress((resp) => {
-      if (window.__pointerOverViz) return;
-      const mapped = Math.floor((resp.progress || 0) * (numFrames - 1));
-      if (mapped !== currFrameidx) onFrameChange(mapped);
-    });
+    if (scrollHeight <= 0) return;
 
-  window.addEventListener("resize", () => scroller.resize());
+    const t = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
+    const mapped = Math.floor(t * (numFrames));
+    if (mapped !== currFrameidx) onFrameChange(mapped);
+  };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+
+  // ensure correct value on load
+  onScroll();
 }
 
-// wheel -> slider mapping on the globe container for fine control (throttled)
-let wheelCooldown = false;
-function initWheelToSlider() {
-  const node = window;
-  node.addEventListener(
-    "wheel",
-    (e) => {
-      // if the user's pointer is over the visualization, do not change frames
-      if (window.__pointerOverViz) return;
-
-      if (wheelCooldown) return;
-      wheelCooldown = true;
-      setTimeout(() => (wheelCooldown = false), 80); // small throttle
-
-      const delta = Math.sign(e.deltaY);
-      let target = currFrameidx + delta;
-      target = Math.max(0, Math.min(target, rrqpeData12h.length - 1));
-      if (target !== currFrameidx) onFrameChange(target);
-    },
-    // passive true keeps native page scroll behavior when not blocked
-    { passive: true }
-  );
-}
 
 function formatDate(dt) {
   const year = dt.getUTCFullYear();
@@ -343,9 +317,8 @@ async function init() {
   // slider
   initTimeSlider(rrqpeData12h.length);
 
-  // wire scroll wheel/scrollama after slider is configured
-  initScrollama(rrqpeData12h.length);
-  initWheelToSlider();
+  // map whole-page scroll position 0..1 to slider frames 0..N-1
+  initScrollToSlider(rrqpeData12h.length);
 
   // Hide loading overlay immediately
   overlay.classList.add("hidden");
