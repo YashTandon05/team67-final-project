@@ -23,8 +23,8 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #050814; /* Match body bg to cover content behind */
-  padding-top: 24px; /* Add padding to match main padding */
+  background: #050814;
+  padding-top: 24px;
   padding-bottom: 10px;
 }
 
@@ -50,13 +50,13 @@ header p {
   justify-content: center;
 
   backdrop-filter: blur(8px);
-  background: rgba(0, 0, 0, 0.35); /* slight dim for readability */
+  background: rgba(0, 0, 0, 0.35);
 
   color: white;
   font-size: 2rem;
   font-weight: 600;
 
-  z-index: 9999; /* above everything */
+  z-index: 9999;
 }
 
 /* Hide overlay when data is ready */
@@ -99,11 +99,11 @@ article {
 
 .step {
   margin: 0 auto 2rem auto;
-  min-height: 80vh; /* Ensure enough scroll space */
+  min-height: 80vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0; /* Hidden by default */
+  opacity: 0;
   transition: opacity 0.5s ease-in-out;
 }
 
@@ -157,7 +157,7 @@ article {
 
 #globe-container {
   position: sticky;
-  top: 320px; /* Increased from 280px to add more space */
+  top: 320px;
   z-index: 10;
 }
 
@@ -195,7 +195,7 @@ article {
   margin-left: auto;
   margin-right: auto;
   position: sticky;
-  top: 130px; /* Below header */
+  top: 130px;
   z-index: 20;
 }
 

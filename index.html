@@ -15,8 +15,7 @@
       <header>
         <h1>What does a hurricane look like?</h1>
         <p>
-          Interactive data visualization to explore major hurricanes in 2024 and
-          learn about emerging patterns in hurricane development.
+          Find our write-up for Prototype checkpoint <a href="https://docs.google.com/document/d/1X1jh7CRFQWT5dnrh5g4zQzXNTHGAbbVkkE-RGIJ5owg/edit?usp=sharing" target="_blank">here</a>.
         </p>
       </header>
 
@@ -45,13 +44,15 @@
             <!-- Intro Section: January Data -->
             <div class="step" data-step="intro">
               <div class="text-content">
-                <h2>Early Season: January 2024</h2>
+                <h2>What have we done so far?</h2>
                 <p>
-                  The year began with typical winter patterns. In January, precipitation
-                  was largely driven by frontal systems moving across the continent.
+                  We have implemented an orthographic projection of the globe with interactive features to pan (by dragging with mouse) and zoom (by scrolling when hovered over the globe). Panning includes inertia tracking for user engagement and immersion.  
                 </p>
                 <p>
-                  The Atlantic basin remained quiet, as is expected during the winter months.
+                  Behind the scenes, we have parsed the RRQPE (Rainfall Rate Quantitative Precipitation Estimate) data from the GOES16 satellite for 2024 at 12 hour time intervals. We have used this to implement a projection of RRQPE values onto the globe in a heat map style tied to a slider and the users scroll wheel to traverse the values by time.
+                </p>
+                <p>
+                  Since we have two interactions tied to the scroll wheel we have implemented tracking of the viewers’ mouse (to see which element they’re hovering over) to avoid conflicts. 
                 </p>
               </div>
             </div>
@@ -59,13 +60,12 @@
             <!-- Filler Section: Transition from Jan to Sept -->
             <div class="step" data-step="transition">
               <div class="text-content">
-                <h2>The Season Progresses</h2>
+                <h2>What will be the most challenging part of your project to design and why?</h2>
                 <p>
-                  As spring turned to summer, the ocean waters warmed, setting the stage
-                  for tropical development.
+                  The most challenging part of the project to design is the storytelling and scope. We have an immense data set to work with, but guiding the user through interesting, yet focused narratives about hurricanes will require careful planning. 
                 </p>
                 <p>
-                  Scroll down to fast-forward to the peak of the hurricane season.
+                  We hope to avoid implementation of interactive elements that do not elucidate new data-driven conclusions. We are confident that the next week of compiling data will naturally lead us to interesting trends across hurricanes in the western hemisphere in 2024. 
                 </p>
               </div>
             </div>
