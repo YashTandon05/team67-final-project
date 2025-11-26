@@ -1,5 +1,6 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm";
+import { loadDailyRRQPE } from "./rrqpe_daily.js";
 import { preload12hRRQPE } from "./rrqpe12hr.js";
 
 // globals to track
@@ -240,8 +241,66 @@ function initTimeSlider(numFrames) {
   });
 }
 
-// ---------- Page scroll -> slider wiring ----------
-function initScrollToSlider(numFrames) {
+// ---------- Scrollama Scrollytelling ----------
+function initScrollytelling(numFrames) {
+  const scroller = scrollama();
+
+  scroller
+    .setup({
+      step: "#scrolly article .step",
+      offset: 0.5,
+      debug: false,
+    })
+    .onStepEnter((response) => {
+      // response = { element, index, direction }
+      response.element.classList.add("is-active");
+
+      const step = response.element.dataset.step;
+      if (step === "helene") {
+        // Zoom to Helene: [-95, -70, 15, 40]
+        // Center approx [-82.5, 27.5]
+        // Rotation should be opposite of center: [82.5, -27.5]
+        const targetScale = width * 1.75; // Zoom in 3x
+        const targetRotate = [82.5, -27.5];
+
+        d3.transition()
+          .duration(1500)
+          .tween("rotate", () => {
+            const r = d3.interpolate(projection.rotate(), targetRotate);
+            const s = d3.interpolate(projection.scale(), targetScale);
+            return (t) => {
+              projection.rotate(r(t));
+              projection.scale(s(t));
+              // Update currentScale to keep track for drag/zoom
+              currentScale = s(t); 
+              redraw();
+            };
+          });
+      } else {
+        // Reset to default view
+        const targetScale = width * 0.45;
+        const targetRotate = [80, 0];
+
+        d3.transition()
+          .duration(1500)
+          .tween("rotate", () => {
+            const r = d3.interpolate(projection.rotate(), targetRotate);
+            const s = d3.interpolate(projection.scale(), targetScale);
+            return (t) => {
+              projection.rotate(r(t));
+              projection.scale(s(t));
+              currentScale = s(t);
+              redraw();
+            };
+          });
+      }
+    })
+    .onStepExit((response) => {
+      response.element.classList.remove("is-active");
+    });
+
+  // Continuous scroll listener for the entire page height mapped to slider
+  // We want the slider to move as we scroll through the scrolly section
   const onScroll = () => {
     const doc = document.documentElement;
     const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
@@ -249,15 +308,19 @@ function initScrollToSlider(numFrames) {
 
     if (scrollHeight <= 0) return;
 
+    // Map scroll percentage to frame index
     const t = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
-    const mapped = Math.floor(t * (numFrames));
-    if (mapped !== currFrameidx) onFrameChange(mapped);
+    const mapped = Math.floor(t * (numFrames - 1));
+    
+    if (mapped !== currFrameidx) {
+      onFrameChange(mapped);
+    }
   };
 
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
-
-  // ensure correct value on load
+  
+  // Initial call
   onScroll();
 }
 
@@ -296,12 +359,18 @@ async function init() {
   const overlay = document.getElementById("loading-overlay");
 
   // data loading
-  const [world, rrqpe] = await Promise.all([
+  const [world, rrqpeJan, rrqpeSept] = await Promise.all([
     d3.json(
       "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json"
     ),
     preload12hRRQPE(),
+    loadDailyRRQPE(),
   ]);
+
+  // Merge datasets
+  const rrqpe = [...rrqpeJan, ...rrqpeSept].sort(
+    (a, b) => a.datetime - b.datetime
+  );
 
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
   rrqpeMin = d3.min(rrqpe, (d) => d3.min(d.vals));
@@ -318,7 +387,7 @@ async function init() {
   initTimeSlider(rrqpeData12h.length);
 
   // map whole-page scroll position 0..1 to slider frames 0..N-1
-  initScrollToSlider(rrqpeData12h.length);
+  initScrollytelling(rrqpeData12h.length);
 
   // Hide loading overlay immediately
   overlay.classList.add("hidden");

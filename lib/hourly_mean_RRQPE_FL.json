@@ -1,0 +1,866 @@
+[
+  {
+    "timestamp": "2024-09-23T00:00Z",
+    "mean_value": 0.14969564974308014,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T01:00Z",
+    "mean_value": 0.08467905968427658,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T02:00Z",
+    "mean_value": 0.07008548080921173,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T03:00Z",
+    "mean_value": 0.056248102337121964,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T04:00Z",
+    "mean_value": 0.022165214642882347,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T05:00Z",
+    "mean_value": 0.011065433733165264,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T06:00Z",
+    "mean_value": 0.005244544707238674,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T07:00Z",
+    "mean_value": 0.0030394033528864384,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T08:00Z",
+    "mean_value": 0.002625194611027837,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T09:00Z",
+    "mean_value": 0.005124974995851517,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T10:00Z",
+    "mean_value": 0.005052333697676659,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T11:00Z",
+    "mean_value": 0.002900978084653616,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T12:00Z",
+    "mean_value": 0.006728434469550848,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T13:00Z",
+    "mean_value": 0.014316566288471222,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T14:00Z",
+    "mean_value": 0.04398614168167114,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T15:00Z",
+    "mean_value": 0.046177517622709274,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T16:00Z",
+    "mean_value": 0.06282246857881546,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T17:00Z",
+    "mean_value": 0.07105813920497894,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T18:00Z",
+    "mean_value": 0.09463126957416534,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T19:00Z",
+    "mean_value": 0.12699060142040253,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T20:00Z",
+    "mean_value": 0.15312358736991882,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T21:00Z",
+    "mean_value": 0.10683657228946686,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T22:00Z",
+    "mean_value": 0.11573515087366104,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-23T23:00Z",
+    "mean_value": 0.18401576578617096,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T00:00Z",
+    "mean_value": 0.22230328619480133,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T01:00Z",
+    "mean_value": 0.31810468435287476,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T02:00Z",
+    "mean_value": 0.39714229106903076,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T03:00Z",
+    "mean_value": 0.4999903440475464,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T04:00Z",
+    "mean_value": 0.445839524269104,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T05:00Z",
+    "mean_value": 0.3684942424297333,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T06:00Z",
+    "mean_value": 0.3098217248916626,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T07:00Z",
+    "mean_value": 0.31594252586364746,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T08:00Z",
+    "mean_value": 0.29438138008117676,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T09:00Z",
+    "mean_value": 0.2911299467086792,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T10:00Z",
+    "mean_value": 0.30595260858535767,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T11:00Z",
+    "mean_value": 0.3699682652950287,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T12:00Z",
+    "mean_value": 0.3800220489501953,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T13:00Z",
+    "mean_value": 0.5814214944839478,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T14:00Z",
+    "mean_value": 0.5946294069290161,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T15:00Z",
+    "mean_value": 0.5130625367164612,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T16:00Z",
+    "mean_value": 0.39491939544677734,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T17:00Z",
+    "mean_value": 0.3296838700771332,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T18:00Z",
+    "mean_value": 0.2709922194480896,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T19:00Z",
+    "mean_value": 0.3930010199546814,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T20:00Z",
+    "mean_value": 0.5542402863502502,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T21:00Z",
+    "mean_value": 0.7488767504692078,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T22:00Z",
+    "mean_value": 0.9653133749961853,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-24T23:00Z",
+    "mean_value": 1.154604434967041,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T00:00Z",
+    "mean_value": 1.2085881233215332,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T01:00Z",
+    "mean_value": 1.2982556819915771,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T02:00Z",
+    "mean_value": 1.3641104698181152,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T03:00Z",
+    "mean_value": 1.566573143005371,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T04:00Z",
+    "mean_value": 1.7695053815841675,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T05:00Z",
+    "mean_value": 2.0767014026641846,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T06:00Z",
+    "mean_value": 2.338822841644287,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T07:00Z",
+    "mean_value": 2.6015048027038574,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T08:00Z",
+    "mean_value": 2.740607738494873,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T09:00Z",
+    "mean_value": 3.190150260925293,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T10:00Z",
+    "mean_value": 3.20206618309021,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T11:00Z",
+    "mean_value": 3.3452541828155518,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T12:00Z",
+    "mean_value": 2.874570369720459,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T13:00Z",
+    "mean_value": 2.9024369716644287,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T14:00Z",
+    "mean_value": 2.486222743988037,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T15:00Z",
+    "mean_value": 2.1202890872955322,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T16:00Z",
+    "mean_value": 1.8915433883666992,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T17:00Z",
+    "mean_value": 1.7546780109405518,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T18:00Z",
+    "mean_value": 1.6115970611572266,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T19:00Z",
+    "mean_value": 1.3148962259292603,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T20:00Z",
+    "mean_value": 1.317006230354309,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T21:00Z",
+    "mean_value": 1.3971928358078003,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T22:00Z",
+    "mean_value": 1.4492404460906982,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-25T23:00Z",
+    "mean_value": 1.501795768737793,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T00:00Z",
+    "mean_value": 1.4129635095596313,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T01:00Z",
+    "mean_value": 1.4538750648498535,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T02:00Z",
+    "mean_value": 1.3472427129745483,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T03:00Z",
+    "mean_value": 1.2505711317062378,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T04:00Z",
+    "mean_value": 1.2027684450149536,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T05:00Z",
+    "mean_value": 1.2471522092819214,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T06:00Z",
+    "mean_value": 1.1535331010818481,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T07:00Z",
+    "mean_value": 1.0512847900390625,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T08:00Z",
+    "mean_value": 1.2223619222640991,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T09:00Z",
+    "mean_value": 1.2216860055923462,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T10:00Z",
+    "mean_value": 1.2888541221618652,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T11:00Z",
+    "mean_value": 1.3380056619644165,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T12:00Z",
+    "mean_value": 1.286978840827942,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T13:00Z",
+    "mean_value": 1.499477744102478,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T14:00Z",
+    "mean_value": 1.3793953657150269,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T15:00Z",
+    "mean_value": 1.2753822803497314,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T16:00Z",
+    "mean_value": 1.3803656101226807,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T17:00Z",
+    "mean_value": 1.4367882013320923,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T18:00Z",
+    "mean_value": 1.4090192317962646,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T19:00Z",
+    "mean_value": 1.365458607673645,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T20:00Z",
+    "mean_value": 1.3835941553115845,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T21:00Z",
+    "mean_value": 1.481972575187683,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T22:00Z",
+    "mean_value": 1.4187833070755005,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-26T23:00Z",
+    "mean_value": 1.4132041931152344,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T00:00Z",
+    "mean_value": 1.514788031578064,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T01:00Z",
+    "mean_value": 1.4551854133605957,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T02:00Z",
+    "mean_value": 1.4592286348342896,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T03:00Z",
+    "mean_value": 1.5189169645309448,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T04:00Z",
+    "mean_value": 1.4594124555587769,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T05:00Z",
+    "mean_value": 1.454699993133545,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T06:00Z",
+    "mean_value": 1.3959447145462036,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T07:00Z",
+    "mean_value": 1.1159632205963135,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T08:00Z",
+    "mean_value": 0.8383370637893677,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T09:00Z",
+    "mean_value": 0.7623095512390137,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T10:00Z",
+    "mean_value": 0.6375664472579956,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T11:00Z",
+    "mean_value": 0.5473439693450928,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T12:00Z",
+    "mean_value": 0.24876977503299713,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T13:00Z",
+    "mean_value": 0.24964943528175354,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T14:00Z",
+    "mean_value": 0.2205478549003601,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T15:00Z",
+    "mean_value": 0.23140636086463928,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T16:00Z",
+    "mean_value": 0.2492350935935974,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T17:00Z",
+    "mean_value": 0.21933527290821075,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T18:00Z",
+    "mean_value": 0.182295560836792,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T19:00Z",
+    "mean_value": 0.17103144526481628,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T20:00Z",
+    "mean_value": 0.15452460944652557,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T21:00Z",
+    "mean_value": 0.16848118603229523,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T22:00Z",
+    "mean_value": 0.20881883800029755,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-27T23:00Z",
+    "mean_value": 0.19131684303283691,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T00:00Z",
+    "mean_value": 0.12459475547075272,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T01:00Z",
+    "mean_value": 0.050840940326452255,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T02:00Z",
+    "mean_value": 0.03569571301341057,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T03:00Z",
+    "mean_value": 0.028920408338308334,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T04:00Z",
+    "mean_value": 0.027435539290308952,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T05:00Z",
+    "mean_value": 0.016269423067569733,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T06:00Z",
+    "mean_value": 0.009086627513170242,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T07:00Z",
+    "mean_value": 0.020320160314440727,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T08:00Z",
+    "mean_value": 0.04029902070760727,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T09:00Z",
+    "mean_value": 0.04695631563663483,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T10:00Z",
+    "mean_value": 0.052316814661026,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T11:00Z",
+    "mean_value": 0.055975768715143204,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T12:00Z",
+    "mean_value": 0.07402423024177551,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T13:00Z",
+    "mean_value": 0.05864362046122551,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T14:00Z",
+    "mean_value": 0.05056353658437729,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T15:00Z",
+    "mean_value": 0.062307208776474,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T16:00Z",
+    "mean_value": 0.08806861191987991,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T17:00Z",
+    "mean_value": 0.050865065306425095,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T18:00Z",
+    "mean_value": 0.057539429515600204,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T19:00Z",
+    "mean_value": 0.0700821727514267,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T20:00Z",
+    "mean_value": 0.16137732565402985,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T21:00Z",
+    "mean_value": 0.30265238881111145,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T22:00Z",
+    "mean_value": 0.3931947350502014,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  },
+  {
+    "timestamp": "2024-09-28T23:00Z",
+    "mean_value": 0.4325120747089386,
+    "variable": "RRQPE",
+    "product": "ABI-L2-RRQPE"
+  }
+]

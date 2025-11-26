@@ -20,6 +20,12 @@ main {
 header {
   text-align: center;
   margin-bottom: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #050814; /* Match body bg to cover content behind */
+  padding-top: 24px; /* Add padding to match main padding */
+  padding-bottom: 10px;
 }
 
 header h1 {
@@ -76,14 +82,43 @@ header p {
   aspect-ratio: 1 / 1;
 }
 
-/* Scrolling text section */
-#text-section {
+/* Scrollytelling layout */
+#scrolly {
   flex: 1;
   min-width: 300px;
   max-width: 500px;
-  padding: 20px;
-  /* no max-height / overflow so text flows down the page */
-  background: rgba(10, 26, 46, 0.6);
+  position: relative;
+}
+
+article {
+  position: relative;
+  padding: 0;
+  max-width: 30rem;
+  margin: 0 auto;
+}
+
+.step {
+  margin: 0 auto 2rem auto;
+  min-height: 80vh; /* Ensure enough scroll space */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.5s ease-in-out;
+}
+
+.step:last-child {
+  margin-bottom: 0;
+  min-height: 50vh;
+}
+
+.step.is-active {
+  opacity: 1;
+}
+
+.text-content {
+  background: rgba(10, 26, 46, 0.8);
+  padding: 1.5rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
@@ -107,7 +142,7 @@ header p {
     flex-direction: column;
   }
 
-  #text-section {
+  #scrolly {
     max-width: 100%;
   }
 }
@@ -122,7 +157,7 @@ header p {
 
 #globe-container {
   position: sticky;
-  top: 140px; /* leaves room for header + time slider */
+  top: 320px; /* Increased from 280px to add more space */
   z-index: 10;
 }
 
@@ -160,7 +195,7 @@ header p {
   margin-left: auto;
   margin-right: auto;
   position: sticky;
-  top: 0;
+  top: 130px; /* Below header */
   z-index: 20;
 }
 
