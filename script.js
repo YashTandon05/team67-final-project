@@ -33,7 +33,7 @@ function initGlobe(world) {
   width = rect.width;
   height = rect.height;
 
-  currentScale = width * 0.45;
+  currentScale = width * 0.2;
   minScale = width * 0.2;
   maxScale = width * 1.5;
 
@@ -237,7 +237,7 @@ function initTimeSlider(numFrames) {
 
   slider.addEventListener("input", (e) => {
     const idx = Number(e.target.value);
-    onFrameChange(idx);
+    onFrameChange(idx, "slider");
   });
 }
 
@@ -256,39 +256,46 @@ function initScrollytelling(numFrames) {
       response.element.classList.add("is-active");
 
       const step = response.element.dataset.step;
-      if (step === "helene") {
+      if (step === "helene" || step === "transition") {
         // Zoom to Helene: [-95, -70, 15, 40]
         // Center approx [-82.5, 27.5]
         // Rotation should be opposite of center: [82.5, -27.5]
-        const targetScale = width * 1.75; // Zoom in 3x
+        const targetScale = width * 1; // Zoom in 3x (user adjusted to 1x)
         const targetRotate = [82.5, -27.5];
+        // Pan up by 15% of height to avoid time slider
+        const targetTranslate = [width / 2, height / 2 - height * 0.15];
 
         d3.transition()
           .duration(1500)
           .tween("rotate", () => {
             const r = d3.interpolate(projection.rotate(), targetRotate);
             const s = d3.interpolate(projection.scale(), targetScale);
+            const tr = d3.interpolate(projection.translate(), targetTranslate);
             return (t) => {
               projection.rotate(r(t));
               projection.scale(s(t));
+              projection.translate(tr(t));
               // Update currentScale to keep track for drag/zoom
-              currentScale = s(t); 
+              currentScale = s(t);
               redraw();
             };
           });
       } else {
         // Reset to default view
-        const targetScale = width * 0.45;
+        const targetScale = width * 0.2; // Updated to match user change (0.2)
         const targetRotate = [80, 0];
+        const targetTranslate = [width / 2, height / 2];
 
         d3.transition()
           .duration(1500)
           .tween("rotate", () => {
             const r = d3.interpolate(projection.rotate(), targetRotate);
             const s = d3.interpolate(projection.scale(), targetScale);
+            const tr = d3.interpolate(projection.translate(), targetTranslate);
             return (t) => {
               projection.rotate(r(t));
               projection.scale(s(t));
+              projection.translate(tr(t));
               currentScale = s(t);
               redraw();
             };
@@ -311,15 +318,15 @@ function initScrollytelling(numFrames) {
     // Map scroll percentage to frame index
     const t = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
     const mapped = Math.floor(t * (numFrames - 1));
-    
+
     if (mapped !== currFrameidx) {
-      onFrameChange(mapped);
+      onFrameChange(mapped, "scroll");
     }
   };
 
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
-  
+
   // Initial call
   onScroll();
 }
@@ -335,14 +342,33 @@ function formatDate(dt) {
   return `${monthName} ${day}, ${year}`;
 }
 
-function onFrameChange(idx) {
+function onFrameChange(idx, source = "unknown") {
   currFrameidx = idx; // Update the global frame index
-  console.log("Frame index changed to:", idx);
+  // console.log("Frame index changed to:", idx, "Source:", source);
   const frame = rrqpeData12h[idx];
 
   // Update globally-tracked datetime
   currDateTime = new Date(frame.datetime);
-  document.getElementById("time-slider").value = idx;
+
+  // Update slider if not the source
+  const slider = document.getElementById("time-slider");
+  if (slider.value != idx) {
+    slider.value = idx;
+  }
+
+  // Update scroll if not the source
+  if (source !== "scroll") {
+    const doc = document.documentElement;
+    const scrollHeight = (doc.scrollHeight || 0) - window.innerHeight;
+    if (scrollHeight > 0) {
+      const t = idx / (rrqpeData12h.length - 1);
+      const targetScrollTop = t * scrollHeight;
+      // Avoid jitter by checking difference? Or just set it.
+      // Setting it might trigger onScroll, but onScroll checks if mapped !== currFrameidx
+      // If it's the same, onScroll won't call onFrameChange.
+      window.scrollTo(0, targetScrollTop);
+    }
+  }
 
   document.getElementById("current-date").textContent =
     formatDate(currDateTime);
