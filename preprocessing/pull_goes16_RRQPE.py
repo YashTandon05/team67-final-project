@@ -14,14 +14,14 @@ satellite = 16
 product = "ABI-L2-RRQPEF"
 domain = "C"
 
-start = dt.datetime(2024, 10, 7)
-end = dt.datetime(2025, 1, 1)
+start = dt.datetime(2024, 9, 20)
+end = dt.datetime(2024, 10, 15)
 
-sample_times = [dt.time(0, 0), dt.time(12, 0)]
+sample_times = [dt.time(hour=h) for h in range(0, 24, 6)]  # every 6 hours
 
 output = []
 
-path = Path("../lib/RRQPE_2024_12hr.ndjson")
+path = Path("../lib/helene_leslie_6hr_RRPQE.ndjson")
 path.parent.mkdir(parents=True, exist_ok=True)
 
 # ============================================================

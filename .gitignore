@@ -1,5 +1,5 @@
 /cache_datasets/
-/preprocessing.py
+preprocessing/__pycache__/
 preprocessing/test_goes16_RRQPE.py
 preprocessing/post_proc_goes16_RRQPE.py
-data/bak/
+preprocessing/pull_goes16_RRQPE.py

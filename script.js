@@ -1,10 +1,10 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm";
 import { loadDailyRRQPE } from "./rrqpe_daily.js";
-import { preload12hRRQPE } from "./rrqpe12hr.js";
+import { preload6hrRRQPE } from "./rrqpe6hr.js";
 
 // globals to track
-let rrqpeData12h = null;
+let rrqpeData = null;
 let currDateTime = null;
 let currFrameidx = 0;
 
@@ -62,7 +62,8 @@ function initGlobe(world) {
   projection = d3
     .geoOrthographic()
     .scale(currentScale)
-    .translate([width / 2, height / 2]).rotate([80, 0])
+    .translate([width / 2, height / 2])
+    .rotate([80, 0])
     .clipAngle(90);
 
   path = d3.geoPath(projection);
@@ -222,7 +223,7 @@ function redraw() {
   svg.selectAll(".sphere").attr("d", path);
   svg.selectAll(".graticule").attr("d", path);
   landGroup.selectAll("path.land").attr("d", path);
-  if (currFrameidx !== null) renderRRQPEFrame(rrqpeData12h[currFrameidx]);
+  if (currFrameidx !== null) renderRRQPEFrame(rrqpeData[currFrameidx]);
 }
 
 // slider and scroller functionality
@@ -331,7 +332,6 @@ function initScrollytelling(numFrames) {
   onScroll();
 }
 
-
 function formatDate(dt) {
   const year = dt.getUTCFullYear();
   const monthName = dt.toLocaleString("en-US", {
@@ -345,7 +345,7 @@ function formatDate(dt) {
 function onFrameChange(idx, source = "unknown") {
   currFrameidx = idx; // Update the global frame index
   // console.log("Frame index changed to:", idx, "Source:", source);
-  const frame = rrqpeData12h[idx];
+  const frame = rrqpeData[idx];
 
   // Update globally-tracked datetime
   currDateTime = new Date(frame.datetime);
@@ -361,7 +361,7 @@ function onFrameChange(idx, source = "unknown") {
     const doc = document.documentElement;
     const scrollHeight = (doc.scrollHeight || 0) - window.innerHeight;
     if (scrollHeight > 0) {
-      const t = idx / (rrqpeData12h.length - 1);
+      const t = idx / (rrqpeData.length - 1);
       const targetScrollTop = t * scrollHeight;
       // Avoid jitter by checking difference? Or just set it.
       // Setting it might trigger onScroll, but onScroll checks if mapped !== currFrameidx
@@ -385,35 +385,35 @@ async function init() {
   const overlay = document.getElementById("loading-overlay");
 
   // data loading
-  const [world, rrqpeJan, rrqpeSept] = await Promise.all([
+  const [world, rrqpe6hr, rrqpeHourly] = await Promise.all([
     d3.json(
       "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json"
     ),
-    preload12hRRQPE(),
+    preload6hrRRQPE(),
     loadDailyRRQPE(),
   ]);
 
   // Merge datasets
-  const rrqpe = [...rrqpeJan, ...rrqpeSept].sort(
+  const rrqpe = [...rrqpe6hr, ...rrqpeHourly].sort(
     (a, b) => a.datetime - b.datetime
   );
 
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
   rrqpeMin = d3.min(rrqpe, (d) => d3.min(d.vals));
 
-  rrqpeData12h = rrqpe;
+  rrqpeData = rrqpe;
   currFrameidx = 0;
-  currDateTime = new Date(rrqpeData12h[0].datetime);
+  currDateTime = new Date(rrqpeData[0].datetime);
 
   // globe + canvas init
   initGlobe(world);
   initDragZoom();
 
   // slider
-  initTimeSlider(rrqpeData12h.length);
+  initTimeSlider(rrqpeData.length);
 
   // map whole-page scroll position 0..1 to slider frames 0..N-1
-  initScrollytelling(rrqpeData12h.length);
+  initScrollytelling(rrqpeData.length);
 
   // Hide loading overlay immediately
   overlay.classList.add("hidden");
