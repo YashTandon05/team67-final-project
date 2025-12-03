@@ -14,15 +14,16 @@ satellite = 16
 product = "ABI-L2-RRQPEF"
 domain = "C"
 
-start = dt.datetime(2024, 9, 20)
-end = dt.datetime(2024, 10, 15)
+start = dt.datetime(2024, 9, 23)
+end = dt.datetime(2024, 9, 30)
 
-sample_times = [dt.time(hour=h) for h in range(0, 24, 6)]  # every 6 hours
+sample_times = [dt.time(hour=h) for h in range(0, 24, 3)]  # every 2 hours
 
 output = []
 
-path = Path("../lib/helene_leslie_6hr_RRPQE.ndjson")
-path.parent.mkdir(parents=True, exist_ok=True)
+path = Path("../lib/RRQPE_helene/RRQPE_helene_3hr.ndjson")
+
+area_mask = True  # apply atlantic basin mask
 
 # ============================================================
 # Extraction loop
@@ -52,21 +53,27 @@ while current < end:
         proj = QPE["goes_imager_projection"]
 
         a = ccrs.PlateCarree().transform_points(x=X, y=Y, src_crs=crs)
-        # ny, nx = a.shape
-        # pts_reshape = a.reshape(ny, nx, 3)
         lats = a[:, :, 1]
         lons = a[:, :, 0]
 
         # mask for positive values
-        mask = q > 2.5  # mm/hr threshold, considered moderate rain
-        if not np.any(mask):
+        rain_mask = q > 2.5  # mm/hr threshold, considered moderate rain
+        if not np.any(rain_mask):
             print(f"No rain at {target_dt}")
             continue
 
+        # mask for atlantic basin
+        atl_mask = (lons >= -100) & (lons <= -40) & (lats >= 0) & (lats <= 50)
+
+        if area_mask:
+            combined_mask = rain_mask & atl_mask
+        else:
+            combined_mask = rain_mask
+
         # extract only the rainy pixels
-        lat_vals = lats[mask].tolist()
-        lon_vals = lons[mask].tolist()
-        q_vals = q[mask].tolist()
+        lat_vals = lats[combined_mask].tolist()
+        lon_vals = lons[combined_mask].tolist()
+        q_vals = q[combined_mask].tolist()
 
         # downsample
         lat_vals = lat_vals[::10]
@@ -84,7 +91,7 @@ while current < end:
         output.append(entry)
         print(f"Collected {entry['datetime']} ({len(q_vals)} rainy pixels)")
 
-        with open("../lib/RRQPE_2024_12hr.ndjson", "a") as f:
+        with open(path, "a") as f:
             json.dump(entry, f)
             f.write("\n")
 
