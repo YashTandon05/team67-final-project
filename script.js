@@ -40,13 +40,7 @@ function initGlobe(world) {
   svg = globeContainer
     .append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
-    .attr("preserveAspectRatio", "xMidYMid meet")
-    .style("width", "100%")
-    .style("height", "100%")
-    .style("display", "block")
-    .style("position", "absolute")
-    .style("top", "0")
-    .style("left", "0");
+    .attr("preserveAspectRatio", "xMidYMid meet");
 
   canvas = globeContainer
     .append("canvas")
@@ -226,22 +220,6 @@ function redraw() {
   if (currFrameidx !== null) renderRRQPEFrame(rrqpeData[currFrameidx]);
 }
 
-// slider and scroller functionality
-function initTimeSlider(numFrames) {
-  const slider = document.getElementById("time-slider");
-
-  // slider should map (-) frames
-  slider.min = 0;
-  slider.max = numFrames - 1;
-  slider.step = 1;
-  slider.value = 0;
-
-  slider.addEventListener("input", (e) => {
-    const idx = Number(e.target.value);
-    onFrameChange(idx, "slider");
-  });
-}
-
 // ---------- Scrollama Scrollytelling ----------
 function initScrollytelling(numFrames) {
   const scroller = scrollama();
@@ -307,8 +285,7 @@ function initScrollytelling(numFrames) {
       response.element.classList.remove("is-active");
     });
 
-  // Continuous scroll listener for the entire page height mapped to slider
-  // We want the slider to move as we scroll through the scrolly section
+  // Continuous scroll listener for the entire page height
   const onScroll = () => {
     const doc = document.documentElement;
     const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
@@ -317,11 +294,12 @@ function initScrollytelling(numFrames) {
     if (scrollHeight <= 0) return;
 
     // Map scroll percentage to frame index
+
     const t = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
     const mapped = Math.floor(t * (numFrames - 1));
 
     if (mapped !== currFrameidx) {
-      onFrameChange(mapped, "scroll");
+      onFrameChange(mapped);
     }
   };
 
@@ -342,38 +320,16 @@ function formatDate(dt) {
   return `${monthName} ${day}, ${year}`;
 }
 
-function onFrameChange(idx, source = "unknown") {
+function onFrameChange(idx) {
   currFrameidx = idx; // Update the global frame index
-  // console.log("Frame index changed to:", idx, "Source:", source);
   const frame = rrqpeData[idx];
 
   // Update globally-tracked datetime
   currDateTime = new Date(frame.datetime);
 
-  // Update slider if not the source
-  const slider = document.getElementById("time-slider");
-  if (slider.value != idx) {
-    slider.value = idx;
-  }
+  document.getElementById("date").textContent = formatDate(currDateTime);
 
-  // Update scroll if not the source
-  if (source !== "scroll") {
-    const doc = document.documentElement;
-    const scrollHeight = (doc.scrollHeight || 0) - window.innerHeight;
-    if (scrollHeight > 0) {
-      const t = idx / (rrqpeData.length - 1);
-      const targetScrollTop = t * scrollHeight;
-      // Avoid jitter by checking difference? Or just set it.
-      // Setting it might trigger onScroll, but onScroll checks if mapped !== currFrameidx
-      // If it's the same, onScroll won't call onFrameChange.
-      window.scrollTo(0, targetScrollTop);
-    }
-  }
-
-  document.getElementById("current-date").textContent =
-    formatDate(currDateTime);
-
-  document.getElementById("current-time").textContent = `${String(
+  document.getElementById("time").textContent = `${String(
     currDateTime.getUTCHours()
   ).padStart(2, "0")}:00`;
 
@@ -409,16 +365,12 @@ async function init() {
   initGlobe(world);
   initDragZoom();
 
-  // slider
-  initTimeSlider(rrqpeData.length);
-
   // map whole-page scroll position 0..1 to slider frames 0..N-1
   initScrollytelling(rrqpeData.length);
 
   // Hide loading overlay immediately
   overlay.classList.add("hidden");
 
-  // initial render
   redraw();
   animate();
 }

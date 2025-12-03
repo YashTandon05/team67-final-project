@@ -21,7 +21,7 @@ async function fetchJSON(url) {
 export async function preload6hrRRQPE() {
   const rrqpe6hData = [];
   let currDate = startDate;
-  console.log("Starting to preload 12-hour RRQPE data...");
+  console.log("Starting to preload 6-hour RRQPE data...");
 
   while (currDate <= endDate) {
     const yyyy = currDate.getUTCFullYear();
@@ -31,7 +31,6 @@ export async function preload6hrRRQPE() {
     for (const hh of timeStrings) {
       const fname = `${yyyy}-${mm}-${dd}T${hh}.json`;
       const fpath = path + fname;
-      console.log(`Fetching file: ${fpath}`);
 
       const obj = await fetchJSON(fpath);
       if (!obj) continue;

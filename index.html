@@ -13,28 +13,19 @@
   <body>
     <main>
       <header>
-        <h1>What does a hurricane look like?</h1>
+        <h1>What does the 2024 Atlantic Hurricane Season look like?</h1>
         <p>
-          Interactive data visualization to explore major hurricanes in 2024 and
-          learn about emerging patterns in hurricane development.
+          Interactive data visualization to explore path predictions and
+          categories of major hurricanes between September 20, 2024 and October
+          15, 2024.
         </p>
       </header>
 
       <div id="loading-overlay">Loading precipitation data…</div>
-
-      <section id="time-controls">
-        <div id="time-display">
-          <div id="current-date">January 1, 2024</div>
-          <div id="current-time">00:00</div>
-        </div>
-        <div id="slider-container">
-          <input type="range" id="time-slider" value="0" />
-          <div id="slider-labels">
-            <span>Jan 1, 2024</span>
-            <span>Dec 31, 2024</span>
-          </div>
-        </div>
-      </section>
+      <div id="datetime-display">
+        <div id="date"></div>
+        <div id="time"></div>
+      </div>
 
       <section id="viz-wrapper">
         <div id="globe-container">
