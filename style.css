@@ -129,6 +129,10 @@ ul {
   z-index: 1000;
 }
 
+#controls-container.hidden {
+  display: none;
+}
+
 .toggle-btn {
   background: rgba(43, 156, 133, 0.9);
   color: white;

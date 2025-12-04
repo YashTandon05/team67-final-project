@@ -135,29 +135,30 @@ function initLineGraph() {
       return date.getMinutes() === 0 && date.getSeconds() === 0;
     })
     .map((d) => {
-    let maxVal = -1;
-    for (let i = 0; i < d.lons.length; i++) {
-      const lon = d.lons[i];
-      const lat = d.lats[i];
-      if (
-        lat >= FL_LAT_MIN &&
-        lat <= FL_LAT_MAX &&
-        lon >= FL_LON_MIN &&
-        lon <= FL_LON_MAX
-      ) {
-        maxVal = Math.max(maxVal, d.vals[i]);
+      let maxVal = -1;
+      for (let i = 0; i < d.lons.length; i++) {
+        const lon = d.lons[i];
+        const lat = d.lats[i];
+        if (
+          lat >= FL_LAT_MIN &&
+          lat <= FL_LAT_MAX &&
+          lon >= FL_LON_MIN &&
+          lon <= FL_LON_MAX
+        ) {
+          maxVal = Math.max(maxVal, d.vals[i]);
+        }
       }
-    }
-    return {
-      date: new Date(d.datetime),
-      value: maxVal,
-    };
-  }).filter(d => {
-    const date = d.date;
-    const startDate = new Date(date.getFullYear(), 8, 21);
-    const endDate = new Date(date.getFullYear(), 8, 29, 23, 59, 59);
-    return date >= startDate && date <= endDate;
-  });
+      return {
+        date: new Date(d.datetime),
+        value: maxVal,
+      };
+    })
+    .filter((d) => {
+      const date = d.date;
+      const startDate = new Date(date.getFullYear(), 8, 21);
+      const endDate = new Date(date.getFullYear(), 8, 29, 23, 59, 59);
+      return date >= startDate && date <= endDate;
+    });
 
   const container = d3.select("#line-graph-viz");
   container.selectAll("*").remove();
@@ -194,7 +195,7 @@ function initLineGraph() {
     .line()
     .x((d) => x(d.date))
     .y((d) => y(d.value));
-  const partialData = floridaMeanData.filter(d => {
+  const partialData = floridaMeanData.filter((d) => {
     const cutoffDate = new Date(d.date.getFullYear(), 8, 24, 20, 0, 0);
     return d.date <= cutoffDate;
   });
@@ -623,7 +624,7 @@ function renderDMWFrame(frame) {
   const rotate = projection.rotate();
   const centerLon = -rotate[0];
   const centerLat = -rotate[1];
-  
+
   // Arrow styling
   const arrowLength = 15; // Increased from 10
   const arrowHeadSize = 5; // Increased from 3
@@ -643,7 +644,13 @@ function renderDMWFrame(frame) {
 
     const [x, y] = projected;
 
-    if (x < -arrowLength || x >= width + arrowLength || y < -arrowLength || y >= height + arrowLength) continue;
+    if (
+      x < -arrowLength ||
+      x >= width + arrowLength ||
+      y < -arrowLength ||
+      y >= height + arrowLength
+    )
+      continue;
 
     ctx.globalAlpha = 1.0; // Increased opacity
     // Use Plasma for better visibility on dark background (avoids black)
@@ -652,7 +659,7 @@ function renderDMWFrame(frame) {
     );
     ctx.strokeStyle = ctx.fillStyle;
     ctx.lineWidth = 2.5; // Bolder lines
-    
+
     // Calculate rotation angle from u, v components
     // Math.atan2(y, x) -> Math.atan2(v, u)
     // Note: In canvas, y increases downwards. In geography/math, v (North) is positive y (up).
@@ -661,30 +668,30 @@ function renderDMWFrame(frame) {
     // A simple approximation is to assume North is Up (-y on screen) and East is Right (+x on screen).
     // But on a globe, "North" direction changes based on location.
     // For a proper implementation, we should project a second point slightly offset by the wind vector to get the screen angle.
-    
+
     // Let's project (lon, lat) and (lon + u_delta, lat + v_delta) to get screen angle.
     // Since u, v are in m/s, we need to convert to degrees delta roughly.
     // 1 deg lat ~ 111km. 1 m/s is very small in degrees.
     // Let's just use a small epsilon for direction calculation.
-    
+
     // Normalize vector
     const mag = Math.sqrt(uComp * uComp + vComp * vComp);
     if (mag === 0) continue;
-    
+
     // We can't just add u/v to lat/lon directly because u is zonal (East-West) and v is meridional (North-South).
     // u is parallel to latitude circles, v is parallel to longitude lines.
     // Simple approach:
     // Target point in lat/lon space:
     // dLat = v * scaling_factor
     // dLon = u * scaling_factor / cos(lat)
-    
+
     const scaling = 0.1; // arbitrary small step to determine direction
     const dLat = scaling * vComp;
-    const dLon = scaling * uComp / Math.cos(lat * Math.PI / 180);
-    
+    const dLon = (scaling * uComp) / Math.cos((lat * Math.PI) / 180);
+
     const projectedTarget = projection([lon + dLon, lat + dLat]);
     if (!projectedTarget) continue;
-    
+
     const dx = projectedTarget[0] - x;
     const dy = projectedTarget[1] - y;
     const angle = Math.atan2(dy, dx);
@@ -692,7 +699,7 @@ function renderDMWFrame(frame) {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
-    
+
     // Draw arrow
     ctx.beginPath();
     ctx.moveTo(-arrowLength / 2, 0);
@@ -701,7 +708,7 @@ function renderDMWFrame(frame) {
     ctx.moveTo(arrowLength / 2, 0);
     ctx.lineTo(arrowLength / 2 - arrowHeadSize, arrowHeadSize / 2);
     ctx.stroke();
-    
+
     ctx.restore();
   }
 }
@@ -710,7 +717,7 @@ function redraw() {
   svg.selectAll(".sphere").attr("d", path);
   svg.selectAll(".graticule").attr("d", path);
   landGroup.selectAll("path.land").attr("d", path);
-  
+
   if (currentFeature === "rainfall") {
     if (currFrameidx !== null) renderRRQPEFrame(rrqpeData[currFrameidx]);
   } else {
@@ -721,15 +728,15 @@ function redraw() {
       // We can find the frame with the smallest time difference
       let closestFrame = null;
       let minDiff = Infinity;
-      
-      for(const frame of dmwData) {
+
+      for (const frame of dmwData) {
         const diff = Math.abs(new Date(frame.datetime) - currDateTime);
-        if(diff < minDiff) {
+        if (diff < minDiff) {
           minDiff = diff;
           closestFrame = frame;
         }
       }
-      
+
       // Only show if within reasonable threshold (e.g. 1.5 hours)
       if (minDiff < 1.5 * 60 * 60 * 1000) {
         renderDMWFrame(closestFrame);
@@ -858,6 +865,10 @@ function initScrollytelling(numFrames) {
 
       // Camera Movements
       if (step === "scene2" || step === "scene6" || step === "scene10") {
+        // button toggle
+
+        d3.select("#controls-container").classed("hidden", false);
+
         // Zoom to Helene
         const targetScale = width * 1.2;
         const targetRotate = [80, -30.5];
@@ -882,6 +893,9 @@ function initScrollytelling(numFrames) {
         const targetScale = width * 0.2;
         const targetRotate = [80, 0];
         const targetTranslate = [width / 2, height / 2];
+
+        // button toggle
+        d3.select("#controls-container").classed("hidden", true);
 
         d3.transition()
           .duration(1500)
@@ -987,10 +1001,7 @@ function initColorScale(title, min, max, interpolator) {
   const ctx = canvas.node().getContext("2d");
 
   // One mapping scale for ramp position -> actual data value
-  const valueScale = d3
-    .scaleLinear()
-    .domain([min, max])
-    .range([1, 0]); // top is max, bottom is min
+  const valueScale = d3.scaleLinear().domain([min, max]).range([1, 0]); // top is max, bottom is min
 
   // Color interpolator
   const colorScale = d3
@@ -1020,13 +1031,14 @@ function initColorScale(title, min, max, interpolator) {
 
   // Add title in the middle (rotated) or side
   // Let's add it to the side for now
-  const titleDiv = legend.append("div")
-      .style("writing-mode", "vertical-rl")
-      .style("transform", "rotate(180deg)")
-      .style("font-size", "12px")
-      .style("font-weight", "bold")
-      .style("margin-left", "5px")
-      .text(title);
+  const titleDiv = legend
+    .append("div")
+    .style("writing-mode", "vertical-rl")
+    .style("transform", "rotate(180deg)")
+    .style("font-size", "12px")
+    .style("font-weight", "bold")
+    .style("margin-left", "5px")
+    .text(title);
 
   labelContainer
     .append("div")
@@ -1080,12 +1092,12 @@ async function init() {
 
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
   rrqpeMin = d3.min(rrqpe, (d) => d3.min(d.vals));
-  
+
   // Process DMW data
   if (dmwDataRaw) {
-      dmwData = dmwDataRaw;
-      dmwMax = d3.max(dmwData, (d) => d3.max(d.vals));
-      dmwMin = d3.min(dmwData, (d) => d3.min(d.vals));
+    dmwData = dmwDataRaw;
+    dmwMax = d3.max(dmwData, (d) => d3.max(d.vals));
+    dmwMin = d3.min(dmwData, (d) => d3.min(d.vals));
   }
 
   rrqpeData = rrqpe;
@@ -1095,21 +1107,31 @@ async function init() {
   // globe + canvas init
   initGlobe(world);
   initDragZoom();
-  initColorScale("Rainfall Rate (mm/hr)", rrqpeMin, rrqpeMax, d3.interpolateTurbo);
-  
+  initColorScale(
+    "Rainfall Rate (mm/hr)",
+    rrqpeMin,
+    rrqpeMax,
+    d3.interpolateTurbo
+  );
+
   // Toggle Logic
   const toggleBtn = document.getElementById("feature-toggle");
   toggleBtn.addEventListener("click", () => {
-      if (currentFeature === "rainfall") {
-          currentFeature = "wind";
-          toggleBtn.textContent = "Switch to Rainfall";
-          initColorScale("Wind Speed (m/s)", dmwMin, dmwMax, d3.interpolateInferno);
-      } else {
-          currentFeature = "rainfall";
-          toggleBtn.textContent = "Switch to Wind Speed";
-          initColorScale("Rainfall Rate (mm/hr)", rrqpeMin, rrqpeMax, d3.interpolateTurbo);
-      }
-      redraw();
+    if (currentFeature === "rainfall") {
+      currentFeature = "wind";
+      toggleBtn.textContent = "Switch to Rainfall";
+      initColorScale("Wind Speed (m/s)", dmwMin, dmwMax, d3.interpolateInferno);
+    } else {
+      currentFeature = "rainfall";
+      toggleBtn.textContent = "Switch to Wind Speed";
+      initColorScale(
+        "Rainfall Rate (mm/hr)",
+        rrqpeMin,
+        rrqpeMax,
+        d3.interpolateTurbo
+      );
+    }
+    redraw();
   });
 
   // map whole-page scroll position 0..1 to slider frames 0..N-1
