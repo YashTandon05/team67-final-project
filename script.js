@@ -135,8 +135,7 @@ function initLineGraph() {
       return date.getMinutes() === 0 && date.getSeconds() === 0;
     })
     .map((d) => {
-    let sum = 0;
-    let count = 0;
+    let maxVal = -1;
     for (let i = 0; i < d.lons.length; i++) {
       const lon = d.lons[i];
       const lat = d.lats[i];
@@ -146,13 +145,12 @@ function initLineGraph() {
         lon >= FL_LON_MIN &&
         lon <= FL_LON_MAX
       ) {
-        sum += d.vals[i];
-        count++;
+        maxVal = Math.max(maxVal, d.vals[i]);
       }
     }
     return {
       date: new Date(d.datetime),
-      value: count > 0 ? sum / count : 0,
+      value: maxVal,
     };
   }).filter(d => {
     const date = d.date;
@@ -197,7 +195,7 @@ function initLineGraph() {
     .x((d) => x(d.date))
     .y((d) => y(d.value));
   const partialData = floridaMeanData.filter(d => {
-    const cutoffDate = new Date(d.date.getFullYear(), 8, 25, 12, 0, 0);
+    const cutoffDate = new Date(d.date.getFullYear(), 8, 24, 20, 0, 0);
     return d.date <= cutoffDate;
   });
 
@@ -619,16 +617,23 @@ function renderDMWFrame(frame) {
   const lons = frame.lons;
   const lats = frame.lats;
   const vals = frame.vals;
+  const us = frame.u;
+  const vs = frame.v;
 
-  const pointSize = 4;
   const rotate = projection.rotate();
   const centerLon = -rotate[0];
   const centerLat = -rotate[1];
+  
+  // Arrow styling
+  const arrowLength = 15; // Increased from 10
+  const arrowHeadSize = 5; // Increased from 3
 
   for (let i = 0; i < lons.length; i++) {
     const lon = lons[i];
     const lat = lats[i];
     const v = vals[i];
+    const uComp = us ? us[i] : 0;
+    const vComp = vs ? vs[i] : 0;
 
     const dist = d3.geoDistance([lon, lat], [centerLon, centerLat]);
     if (dist > Math.PI / 2) continue;
@@ -638,14 +643,66 @@ function renderDMWFrame(frame) {
 
     const [x, y] = projected;
 
-    if (x < -10 || x >= width + 10 || y < -10 || y >= height + 10) continue;
+    if (x < -arrowLength || x >= width + arrowLength || y < -arrowLength || y >= height + arrowLength) continue;
 
-    ctx.globalAlpha = 0.9;
-    // Use a different color scale for wind, e.g., Magma or Inferno
-    ctx.fillStyle = d3.interpolateInferno(
+    ctx.globalAlpha = 1.0; // Increased opacity
+    // Use Plasma for better visibility on dark background (avoids black)
+    ctx.fillStyle = d3.interpolatePlasma(
       d3.scaleLinear().domain([dmwMin, dmwMax]).clamp(true)(v)
     );
-    ctx.fillRect(x, y, pointSize, pointSize);
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = 2.5; // Bolder lines
+    
+    // Calculate rotation angle from u, v components
+    // Math.atan2(y, x) -> Math.atan2(v, u)
+    // Note: In canvas, y increases downwards. In geography/math, v (North) is positive y (up).
+    // However, the projection handles the mapping from lat/lon to x/y.
+    // We need the angle on the screen.
+    // A simple approximation is to assume North is Up (-y on screen) and East is Right (+x on screen).
+    // But on a globe, "North" direction changes based on location.
+    // For a proper implementation, we should project a second point slightly offset by the wind vector to get the screen angle.
+    
+    // Let's project (lon, lat) and (lon + u_delta, lat + v_delta) to get screen angle.
+    // Since u, v are in m/s, we need to convert to degrees delta roughly.
+    // 1 deg lat ~ 111km. 1 m/s is very small in degrees.
+    // Let's just use a small epsilon for direction calculation.
+    
+    // Normalize vector
+    const mag = Math.sqrt(uComp * uComp + vComp * vComp);
+    if (mag === 0) continue;
+    
+    // We can't just add u/v to lat/lon directly because u is zonal (East-West) and v is meridional (North-South).
+    // u is parallel to latitude circles, v is parallel to longitude lines.
+    // Simple approach:
+    // Target point in lat/lon space:
+    // dLat = v * scaling_factor
+    // dLon = u * scaling_factor / cos(lat)
+    
+    const scaling = 0.1; // arbitrary small step to determine direction
+    const dLat = scaling * vComp;
+    const dLon = scaling * uComp / Math.cos(lat * Math.PI / 180);
+    
+    const projectedTarget = projection([lon + dLon, lat + dLat]);
+    if (!projectedTarget) continue;
+    
+    const dx = projectedTarget[0] - x;
+    const dy = projectedTarget[1] - y;
+    const angle = Math.atan2(dy, dx);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    
+    // Draw arrow
+    ctx.beginPath();
+    ctx.moveTo(-arrowLength / 2, 0);
+    ctx.lineTo(arrowLength / 2, 0);
+    ctx.lineTo(arrowLength / 2 - arrowHeadSize, -arrowHeadSize / 2);
+    ctx.moveTo(arrowLength / 2, 0);
+    ctx.lineTo(arrowLength / 2 - arrowHeadSize, arrowHeadSize / 2);
+    ctx.stroke();
+    
+    ctx.restore();
   }
 }
 
