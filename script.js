@@ -12,7 +12,7 @@ let currFrameidx = 0;
 let svg, canvas, ctx, projection, path, graticule, landGroup, globeContainer;
 let width, height;
 let rrqpeMax, rrqpeMin;
-let length6hrdata = 0;
+let n6hrFrames;
 
 // interaction state variables
 let currentScale;
@@ -721,8 +721,8 @@ function initScrollytelling(numFrames) {
       // Camera Movements
       if (step === "scene2" || step === "scene6" || step === "scene10") {
         // Zoom to Helene
-        const targetScale = width * 1;
-        const targetRotate = [82.5, -27.5];
+        const targetScale = width * 1.2;
+        const targetRotate = [80, -30.5];
         const targetTranslate = [width / 2, height / 2 - height * 0.15];
 
         d3.transition()
@@ -773,10 +773,43 @@ function initScrollytelling(numFrames) {
 
     if (scrollHeight <= 0) return;
 
-    // Map scroll percentage to frame index
+    // Determine the document-space ranges for the early intro steps
+    const scene1El = document.querySelector('.step[data-step="scene1"]');
+    const spacerEl = document.querySelector('.step[data-step="spacer"]');
 
-    const t = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
-    const mapped = Math.floor(t * (numFrames - 1));
+    // fall back to full-range mapping if elements are missing
+    if (!scene1El || !spacerEl || !n6hrFrames || n6hrFrames <= 1) {
+      const t = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
+      const mapped = Math.floor(t * (numFrames - 1));
+      if (mapped !== currFrameidx) onFrameChange(mapped);
+      return;
+    }
+
+    // Use a centering offset similar to the scroller offset (0.5)
+    const centerOffset = window.innerHeight * 0.5;
+
+    const rangeStart = Math.max(0, scene1El.offsetTop - centerOffset);
+    const rangeEnd = Math.min(
+      scrollHeight,
+      spacerEl.offsetTop + spacerEl.offsetHeight - centerOffset
+    );
+
+    let mapped = 0;
+
+    if (scrollTop < rangeStart) {
+      mapped = 0;
+    } else if (scrollTop >= rangeStart && scrollTop <= rangeEnd) {
+      // Map the progress within the scene1+spacer range to the 6hr frames
+      const t = (scrollTop - rangeStart) / Math.max(1, rangeEnd - rangeStart);
+      const idx = Math.floor(t * (n6hrFrames - 1));
+      mapped = Math.min(Math.max(idx, 0), n6hrFrames - 1);
+    } else {
+      // Map the remaining scroll to the rest of the frames
+      const remainingFrames = Math.max(1, numFrames - n6hrFrames);
+      const t = (scrollTop - rangeEnd) / Math.max(1, scrollHeight - rangeEnd);
+      const idx = Math.floor(t * (remainingFrames - 1));
+      mapped = n6hrFrames + Math.min(Math.max(idx, 0), remainingFrames - 1);
+    }
 
     if (mapped !== currFrameidx) {
       onFrameChange(mapped);
@@ -788,6 +821,66 @@ function initScrollytelling(numFrames) {
 
   // Initial call
   onScroll();
+}
+
+// legend for color scale
+function initColorScale() {
+  const legendWidth = 20;
+  const legendHeight = 300;
+
+  // Container
+  const legend = d3
+    .select("#color-legend")
+    .style("display", "flex")
+    .style("flex-direction", "row")
+    .style("align-items", "center")
+    .style("gap", "8px");
+
+  // Canvas for color ramp
+  const canvas = legend
+    .append("canvas")
+    .attr("width", legendWidth)
+    .attr("height", legendHeight)
+    .style("border", "1px solid #ccc");
+
+  const ctx = canvas.node().getContext("2d");
+
+  // One mapping scale for ramp position -> actual data value
+  const valueScale = d3
+    .scaleLinear()
+    .domain([rrqpeMin, rrqpeMax])
+    .range([1, 0]); // top is max, bottom is min
+
+  // Color interpolator (Turbo, Viridis, or your preference)
+  const colorScale = d3
+    .scaleSequential()
+    .domain([1, 0])
+    .interpolator(d3.interpolateTurbo);
+
+  // Draw gradient line by line
+  for (let y = 0; y < legendHeight; y++) {
+    const t = y / legendHeight; // 0 at top, 1 at bottom
+    ctx.fillStyle = colorScale(t);
+    ctx.fillRect(0, y, legendWidth, 1);
+  }
+
+  // Add labels
+  const labelContainer = legend
+    .append("div")
+    .style("display", "flex")
+    .style("flex-direction", "column")
+    .style("justify-content", "space-between")
+    .style("height", legendHeight + "px");
+
+  labelContainer
+    .append("div")
+    .style("font-size", "12px")
+    .text(`${rrqpeMax.toFixed(1)}`);
+
+  labelContainer
+    .append("div")
+    .style("font-size", "12px")
+    .text(`${rrqpeMin.toFixed(1)} mm/hr`);
 }
 
 function formatDate(dt) {
@@ -830,6 +923,7 @@ async function init() {
   ]);
 
   // Merge datasets
+  n6hrFrames = rrqpe6hr.length;
   const rrqpe = [...rrqpe6hr, ...rrqpeHourly];
 
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
@@ -842,6 +936,7 @@ async function init() {
   // globe + canvas init
   initGlobe(world);
   initDragZoom();
+  initColorScale();
 
   // map whole-page scroll position 0..1 to slider frames 0..N-1
   initScrollytelling(rrqpeData.length);
