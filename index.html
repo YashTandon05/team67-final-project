@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🌀2024 Hurricane Season</title>
+    <title>🌀Predicting Hurricane Helene</title>
     <link rel="stylesheet" href="style.css" />
     <script src="script.js" type="module"></script>
     <!-- <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -13,10 +13,10 @@
   <body>
     <main>
       <header>
-        <h1>What does the 2024 Atlantic Hurricane Season look like?</h1>
+        <h1>Predicting Hurricane Helene</h1>
         <p>
-          Interactive data visualization to explore path predictions and
-          categories of major hurricanes between September 20, 2024 and October
+          Interactive data visualization to explore path predictions and weather
+          patterns of a major hurricane between September 20, 2024 and October
           15, 2024.
         </p>
       </header>
@@ -26,6 +26,7 @@
         <div id="date"></div>
         <div id="time"></div>
       </div>
+      <a href="#viz-wrapper" id="skip-link">Return to Top</a>
 
       <section id="viz-wrapper">
         <div id="globe-container">
@@ -44,8 +45,15 @@
               <div class="text-content">
                 <h2>Why Are Hurricanes So Hard to Predict?</h2>
                 <p>
-                  2024 was a year defined by hurricanes — and their unpredictability.
-                  But what makes predicting a hurricane so challenging?
+                  2024 was a year defined by hurricanes — and their
+                  unpredictability.
+                  <strong>
+                    From Mid August to Mid October alone, the Atlantic basin
+                    experienced 6 named hurricanes, from Tropical Storms to
+                    Category 5s.
+                  </strong>
+                  But what makes predicting a hurricane so challenging? Start
+                  scrolling to explore.
                 </p>
               </div>
             </div>
@@ -55,43 +63,57 @@
               <div class="text-content">
                 <h2>Enter Hurricane Helene</h2>
                 <p>
-                  We’ll walk through three forecasting challenges using Hurricane Helene.
+                  We’ll walk through three forecasting challenges using
+                  Hurricane Helene. Click to skip to any challenge.
                 </p>
                 <ul>
-                  <li>Intensity</li>
-                  <li>Track</li>
-                  <li>Rainfall</li>
+                  <li id="ch-button"><a href="#chapter1">1. Intensity</a></li>
+                  <li id="ch-button"><a href="#chapter2">2. Track</a></li>
+                  <li id="ch-button"><a href="#chapter3">3. Rainfall</a></li>
                 </ul>
                 <p>You’ll make predictions — just like real forecasters.</p>
               </div>
             </div>
 
             <!-- Scene 3: Line Graph Enters -->
-            <div class="step" data-step="scene3">
+            <div class="step" data-step="scene3" id="chapter1">
               <div class="text-content">
                 <h2>Challenge 1: Intensity</h2>
                 <p>
-                  A hurricane’s rainfall rate — its intensity — is one of the hardest things to forecast.
+                  A hurricane’s rainfall rate — its intensity — is one of the
+                  hardest things to forecast.
                 </p>
-                <p>
-                  Below is Helene’s early rainfall trend over Florida.
-                </p>
+                <p>Below is Helene’s early rainfall trend over Florida.</p>
               </div>
             </div>
 
             <!-- Scene 4: User Guess Prompt (Intensity) -->
-            <div class="step" data-step="scene4" data-behavior="guess-intensity">
+            <div
+              class="step"
+              data-step="scene4"
+              data-behavior="guess-intensity"
+            >
               <div class="text-content">
                 <h2>Your Turn</h2>
                 <p>
-                  <strong>When do you think Helene’s rainfall will exceed 35 mm/hr in Florida?</strong>
+                  <strong
+                    >When do you think Helene’s rainfall will exceed 35 mm/hr in
+                    Florida?</strong
+                  >
                 </p>
                 <div id="line-graph-viz"></div>
-                <p>
-                  Click on the timeline to make your guess.
-                </p>
-                <p id="reality-text" style="display: none; margin-top: 15px; font-style: italic; color: #2b9c85;">
-                  Models had difficulty predicting this spike — intensity forecasting is full of uncertainty.
+                <p>Click on the timeline to make your guess.</p>
+                <p
+                  id="reality-text"
+                  style="
+                    display: none;
+                    margin-top: 15px;
+                    font-style: italic;
+                    color: #2b9c85;
+                  "
+                >
+                  Models had difficulty predicting this spike — intensity
+                  forecasting is full of uncertainty.
                 </p>
               </div>
             </div>
@@ -101,18 +123,19 @@
               <div class="text-content">
                 <h2>The Reality</h2>
                 <p>
-                  Models had difficulty predicting this jump — intensity forecasting is full of uncertainty.
+                  Models had difficulty predicting this jump — intensity
+                  forecasting is full of uncertainty.
                 </p>
               </div>
             </div>
 
             <!-- Scene 6: Return to Globe -->
-            <div class="step" data-step="scene6">
+            <div class="step" data-step="scene6" id="chapter2">
               <div class="text-content">
                 <h2>Challenge 2: Track</h2>
                 <p>
-                  Next: forecasting where a hurricane will go.
-                  Small track errors can shift landfall by hundreds of miles.
+                  Next: forecasting where a hurricane will go. Small track
+                  errors can shift landfall by hundreds of miles.
                 </p>
               </div>
             </div>
@@ -122,7 +145,8 @@
               <div class="text-content">
                 <h2>The Forecast Cone</h2>
                 <p>
-                  Here’s the expert forecast cone for Helene. But models don’t always agree.
+                  Here’s the expert forecast cone for Helene. But models don’t
+                  always agree.
                 </p>
               </div>
             </div>
@@ -132,11 +156,12 @@
               <div class="text-content">
                 <h2>Your Turn</h2>
                 <p>
-                  Based on the wind flow and the cone, <strong>where do you think Helene will be in 12 hours?</strong>
+                  Based on the wind flow and the cone,
+                  <strong
+                    >where do you think Helene will be in 12 hours?</strong
+                  >
                 </p>
-                <p>
-                  Click anywhere on the map.
-                </p>
+                <p>Click anywhere on the map.</p>
               </div>
             </div>
 
@@ -145,19 +170,20 @@
               <div class="text-content">
                 <h2>Track Uncertainty</h2>
                 <p>
-                  Forecast models disagree — and so do we.
-                  Track forecasts carry major uncertainty, especially early on.
+                  Forecast models disagree — and so do we. Track forecasts carry
+                  major uncertainty, especially early on.
                 </p>
               </div>
             </div>
 
             <!-- Scene 10: Rainfall Prediction Map -->
-            <div class="step" data-step="scene10">
+            <div class="step" data-step="scene10" id="chapter3">
               <div class="text-content">
                 <h2>Challenge 3: Rainfall Distribution</h2>
                 <p>
-                  Finally: predicting where the worst rainfall will fall.
-                  Even tiny track shifts can reshape the rainfall footprint completely.
+                  Finally: predicting where the worst rainfall will fall. Even
+                  tiny track shifts can reshape the rainfall footprint
+                  completely.
                 </p>
               </div>
             </div>
@@ -167,11 +193,12 @@
               <div class="text-content">
                 <h2>Your Turn</h2>
                 <p>
-                  <strong>Which region do you think will get the worst rainfall from Helene?</strong>
+                  <strong
+                    >Which region do you think will get the worst rainfall from
+                    Helene?</strong
+                  >
                 </p>
-                <p>
-                  Select an area on the map.
-                </p>
+                <p>Select an area on the map.</p>
               </div>
             </div>
 
@@ -180,7 +207,8 @@
               <div class="text-content">
                 <h2>Complex Factors</h2>
                 <p>
-                  Forecast models often misplace rainfall because it depends on storm speed, track wobble, and moisture inflow.
+                  Forecast models often misplace rainfall because it depends on
+                  storm speed, track wobble, and moisture inflow.
                 </p>
                 <div id="bar-chart-viz"></div>
               </div>
@@ -191,15 +219,19 @@
               <div class="text-content">
                 <h2>Summary</h2>
                 <p>
-                  Hurricane prediction is difficult because every forecast involves uncertainty:
+                  Hurricane prediction is difficult because every forecast
+                  involves uncertainty:
                 </p>
                 <ul>
                   <li><strong>Intensity</strong>: When will rainfall spike?</li>
                   <li><strong>Track</strong>: Where will the storm travel?</li>
-                  <li><strong>Rainfall</strong>: Who gets the worst impacts?</li>
+                  <li>
+                    <strong>Rainfall</strong>: Who gets the worst impacts?
+                  </li>
                 </ul>
                 <p>
-                  Helene’s unpredictability made it dangerous — and this is true for many storms.
+                  Helene’s unpredictability made it dangerous — and this is true
+                  for many storms.
                 </p>
               </div>
             </div>

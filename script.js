@@ -12,6 +12,7 @@ let currFrameidx = 0;
 let svg, canvas, ctx, projection, path, graticule, landGroup, globeContainer;
 let width, height;
 let rrqpeMax, rrqpeMin;
+let length6hrdata = 0;
 
 // interaction state variables
 let currentScale;
@@ -36,7 +37,7 @@ let regions = [
   { id: "A", name: "Panhandle", center: [-85.5, 30.5], radius: 150 },
   { id: "B", name: "Big Bend", center: [-83.5, 29.8], radius: 120 },
   { id: "C", name: "Central FL", center: [-82.0, 28.5], radius: 150 },
-  { id: "D", name: "South FL", center: [-80.5, 26.0], radius: 150 }
+  { id: "D", name: "South FL", center: [-80.5, 26.0], radius: 150 },
 ];
 
 function initGlobe(world) {
@@ -106,8 +107,6 @@ function initGlobe(world) {
   svg.on("click", handleMapClick);
 }
 
-
-
 // --- Helper: Auto-Scroll ---
 function scrollToStep(stepName) {
   const element = document.querySelector(`.step[data-step="${stepName}"]`);
@@ -121,23 +120,30 @@ function initLineGraph() {
   // Florida Bounding Box (Approx)
   // Lat: 24.5 to 31.0
   // Lon: -87.6 to -80.0
-  const FL_LAT_MIN = 24.5, FL_LAT_MAX = 31.0;
-  const FL_LON_MIN = -87.6, FL_LON_MAX = -80.0;
+  const FL_LAT_MIN = 24.5,
+    FL_LAT_MAX = 31.0;
+  const FL_LON_MIN = -87.6,
+    FL_LON_MAX = -80.0;
 
-  floridaMeanData = rrqpeData.map(d => {
+  floridaMeanData = rrqpeData.map((d) => {
     let sum = 0;
     let count = 0;
     for (let i = 0; i < d.lons.length; i++) {
       const lon = d.lons[i];
       const lat = d.lats[i];
-      if (lat >= FL_LAT_MIN && lat <= FL_LAT_MAX && lon >= FL_LON_MIN && lon <= FL_LON_MAX) {
+      if (
+        lat >= FL_LAT_MIN &&
+        lat <= FL_LAT_MAX &&
+        lon >= FL_LON_MIN &&
+        lon <= FL_LON_MAX
+      ) {
         sum += d.vals[i];
         count++;
       }
     }
     return {
       date: new Date(d.datetime),
-      value: count > 0 ? sum / count : 0
+      value: count > 0 ? sum / count : 0,
     };
   });
 
@@ -148,36 +154,44 @@ function initLineGraph() {
   const width = container.node().clientWidth - margin.left - margin.right;
   const height = container.node().clientHeight - margin.top - margin.bottom;
 
-  const svgGraph = container.append("svg")
+  const svgGraph = container
+    .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  const x = d3.scaleTime()
-    .domain(d3.extent(floridaMeanData, d => d.date))
+  const x = d3
+    .scaleTime()
+    .domain(d3.extent(floridaMeanData, (d) => d.date))
     .range([0, width]);
 
-  const y = d3.scaleLinear()
-    .domain([0, d3.max(floridaMeanData, d => d.value)])
+  const y = d3
+    .scaleLinear()
+    .domain([0, d3.max(floridaMeanData, (d) => d.value)])
     .range([height, 0]);
 
-  svgGraph.append("g")
+  svgGraph
+    .append("g")
     .attr("transform", `translate(0,${height})`)
     .call(d3.axisBottom(x).ticks(5));
 
-  svgGraph.append("g")
-    .call(d3.axisLeft(y));
+  svgGraph.append("g").call(d3.axisLeft(y));
 
   // Initial line (partial)
-  const line = d3.line()
-    .x(d => x(d.date))
-    .y(d => y(d.value));
+  const line = d3
+    .line()
+    .x((d) => x(d.date))
+    .y((d) => y(d.value));
 
   // Only show first 20% of data initially
-  const partialData = floridaMeanData.slice(0, Math.floor(floridaMeanData.length * 0.2));
+  const partialData = floridaMeanData.slice(
+    0,
+    Math.floor(floridaMeanData.length * 0.2)
+  );
 
-  svgGraph.append("path")
+  svgGraph
+    .append("path")
     .datum(partialData)
     .attr("class", "line-partial")
     .attr("fill", "none")
@@ -186,7 +200,8 @@ function initLineGraph() {
     .attr("d", line);
 
   // Interaction overlay
-  svgGraph.append("rect")
+  svgGraph
+    .append("rect")
     .attr("width", width)
     .attr("height", height)
     .attr("fill", "transparent")
@@ -198,7 +213,8 @@ function initLineGraph() {
       const guessDate = x.invert(mx);
 
       // Reveal full line
-      svgGraph.append("path")
+      svgGraph
+        .append("path")
         .datum(floridaMeanData)
         .attr("class", "line-full")
         .attr("fill", "none")
@@ -207,12 +223,17 @@ function initLineGraph() {
         .attr("stroke-dasharray", "5,5")
         .attr("d", line)
         .attr("opacity", 0)
-        .transition().duration(1000).attr("opacity", 1);
+        .transition()
+        .duration(1000)
+        .attr("opacity", 1);
 
       // Mark guess
-      svgGraph.append("line")
-        .attr("x1", mx).attr("x2", mx)
-        .attr("y1", 0).attr("y2", height)
+      svgGraph
+        .append("line")
+        .attr("x1", mx)
+        .attr("x2", mx)
+        .attr("y1", 0)
+        .attr("y2", height)
         .attr("stroke", "white")
         .attr("stroke-dasharray", "2,2");
 
@@ -220,7 +241,10 @@ function initLineGraph() {
       d3.select("#reality-text")
         .style("display", "block")
         .style("opacity", 0)
-        .transition().delay(1000).duration(500).style("opacity", 1);
+        .transition()
+        .delay(1000)
+        .duration(500)
+        .style("opacity", 1);
 
       interactionMode = "none";
     });
@@ -251,11 +275,12 @@ function drawExpertCone() {
       type: "LineString",
       coordinates: [
         currentCenter,
-        [endpoint[0] + offset, endpoint[1] + offset]
-      ]
+        [endpoint[0] + offset, endpoint[1] + offset],
+      ],
     };
 
-    svg.append("path")
+    svg
+      .append("path")
       .datum(trackPath)
       .attr("class", "interaction-result expert-cone")
       .attr("d", path)
@@ -265,7 +290,8 @@ function drawExpertCone() {
   }
 
   // Draw green endpoint
-  svg.append("circle")
+  svg
+    .append("circle")
     .attr("class", "interaction-result expert-cone")
     .attr("cx", projection(endpoint)[0])
     .attr("cy", projection(endpoint)[1])
@@ -283,13 +309,11 @@ function drawTrackResult(user, actual) {
     const offset = (Math.random() - 0.5) * 0.5;
     const trackPath = {
       type: "LineString",
-      coordinates: [
-        currentCenter,
-        [user.lon + offset, user.lat + offset]
-      ]
+      coordinates: [currentCenter, [user.lon + offset, user.lat + offset]],
     };
 
-    svg.append("path")
+    svg
+      .append("path")
       .datum(trackPath)
       .attr("class", "interaction-result")
       .attr("d", path)
@@ -299,7 +323,8 @@ function drawTrackResult(user, actual) {
   }
 
   // Draw red endpoint (user's guess)
-  svg.append("circle")
+  svg
+    .append("circle")
     .attr("class", "interaction-result")
     .attr("cx", projection([user.lon, user.lat])[0])
     .attr("cy", projection([user.lon, user.lat])[1])
@@ -309,7 +334,8 @@ function drawTrackResult(user, actual) {
     .attr("stroke-width", 2);
 
   // Draw dashed line from user guess to actual
-  svg.append("path")
+  svg
+    .append("path")
     .datum({ type: "LineString", coordinates: [[user.lon, user.lat], actual] })
     .attr("class", "interaction-result")
     .attr("d", path)
@@ -323,7 +349,8 @@ function drawRegions() {
   // Draw clickable circles for regions
   svg.selectAll(".region-group").remove();
 
-  const g = svg.selectAll(".region-group")
+  const g = svg
+    .selectAll(".region-group")
     .data(regions)
     .enter()
     .append("g")
@@ -331,13 +358,15 @@ function drawRegions() {
     .attr("cursor", "pointer")
     .style("pointer-events", "all") // Ensure clickable
     .on("mouseover", function (event, d) {
-      d3.select(this).select(".region-circle")
+      d3.select(this)
+        .select(".region-circle")
         .attr("fill", "rgba(43, 156, 133, 0.4)")
         .attr("stroke", "#2b9c85")
         .attr("stroke-width", 2);
     })
     .on("mouseout", function (event, d) {
-      d3.select(this).select(".region-circle")
+      d3.select(this)
+        .select(".region-circle")
         .attr("fill", "rgba(255, 255, 255, 0.1)")
         .attr("stroke", "rgba(255, 255, 255, 0.5)")
         .attr("stroke-width", 1);
@@ -351,7 +380,10 @@ function drawRegions() {
       showFeedback(`You selected: ${d.name}`);
 
       const actualRegionId = "B";
-      drawRegionResult(d, regions.find(r => r.id === actualRegionId));
+      drawRegionResult(
+        d,
+        regions.find((r) => r.id === actualRegionId)
+      );
       interactionMode = "none";
       d3.select("#globe-container").classed("cursor-crosshair", false);
 
@@ -362,8 +394,8 @@ function drawRegions() {
 
   g.append("circle")
     .attr("class", "region-circle")
-    .attr("cx", d => projection(d.center)[0])
-    .attr("cy", d => projection(d.center)[1])
+    .attr("cx", (d) => projection(d.center)[0])
+    .attr("cy", (d) => projection(d.center)[1])
     .attr("r", 30) // Fixed radius for better clickability
     .attr("fill", "rgba(255, 255, 255, 0.1)")
     .attr("stroke", "rgba(255, 255, 255, 0.5)")
@@ -371,20 +403,21 @@ function drawRegions() {
 
   // Add Labels A, B, C, D
   g.append("text")
-    .attr("x", d => projection(d.center)[0])
-    .attr("y", d => projection(d.center)[1])
+    .attr("x", (d) => projection(d.center)[0])
+    .attr("y", (d) => projection(d.center)[1])
     .attr("dy", "0.35em")
     .attr("text-anchor", "middle")
     .attr("fill", "white")
     .attr("font-weight", "bold")
     .attr("font-size", "16px")
     .style("pointer-events", "none") // Let clicks pass to circle/group
-    .text(d => d.id);
+    .text((d) => d.id);
 }
 
 function drawRegionResult(userRegion, actualRegion) {
   // Highlight actual
-  svg.append("circle")
+  svg
+    .append("circle")
     .attr("class", "interaction-result")
     .attr("cx", projection(actualRegion.center)[0])
     .attr("cy", projection(actualRegion.center)[1])
@@ -402,18 +435,31 @@ function drawRegionResult(userRegion, actualRegion) {
     { label: "A", val: 30 },
     { label: "B", val: 95 }, // Big Bend
     { label: "C", val: 45 },
-    { label: "D", val: 20 }
+    { label: "D", val: 20 },
   ];
 
-  data.forEach(d => {
-    const row = container.append("div").style("display", "flex").style("margin", "5px 0").style("align-items", "center");
-    row.append("div").text(d.label).style("width", "20px").style("margin-right", "10px");
-    row.append("div")
+  data.forEach((d) => {
+    const row = container
+      .append("div")
+      .style("display", "flex")
+      .style("margin", "5px 0")
+      .style("align-items", "center");
+    row
+      .append("div")
+      .text(d.label)
+      .style("width", "20px")
+      .style("margin-right", "10px");
+    row
+      .append("div")
       .style("width", d.val + "%")
       .style("background", d.label === actualRegion.id ? "#2b9c85" : "#555")
       .style("height", "20px")
       .style("border-radius", "4px");
-    row.append("div").text(d.val + "%").style("margin-left", "10px").style("font-size", "0.8rem");
+    row
+      .append("div")
+      .text(d.val + "%")
+      .style("margin-left", "10px")
+      .style("font-size", "0.8rem");
   });
 }
 
@@ -784,9 +830,7 @@ async function init() {
   ]);
 
   // Merge datasets
-  const rrqpe = [...rrqpe6hr, ...rrqpeHourly].sort(
-    (a, b) => a.datetime - b.datetime
-  );
+  const rrqpe = [...rrqpe6hr, ...rrqpeHourly];
 
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
   rrqpeMin = d3.min(rrqpe, (d) => d3.min(d.vals));

@@ -50,6 +50,43 @@ header p {
   opacity: 0.85;
 }
 
+#skip-link {
+  position: fixed;
+  top: 1vh;
+  right: 1vw;
+  background: rgba(43, 156, 133, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  z-index: 1000;
+}
+
+ul {
+  padding-left: 1.2rem;
+  margin-bottom: 1rem;
+}
+#ch-button {
+  text-decoration: none;
+  cursor: pointer;
+  list-style: none;
+  font-size: 1.2rem;
+}
+
+#ch-button a {
+  text-decoration: none;
+  color: #2b9c85;
+  cursor: pointer;
+}
+
+#ch-button a:hover {
+  font-size: 1.25rem;
+  color: #1e7463;
+  transition: font-size 0.1s ease-in-out;
+  text-decoration: underline;
+}
+
 /* Loading overlay */
 #loading-overlay {
   position: fixed;
@@ -263,8 +300,6 @@ article {
   }
 }
 
-
-
 /* Inline Graphs */
 #line-graph-viz,
 #bar-chart-viz {
@@ -278,7 +313,7 @@ article {
 
 #line-graph-viz svg text,
 #bar-chart-viz div {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   color: #e0e0e0;
 }
 
@@ -306,7 +341,6 @@ article {
 #feedback-message.visible {
   opacity: 1;
 }
-
 
 /* Region Interaction Styles */
 .region-group {
