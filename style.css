@@ -165,7 +165,8 @@ header p {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(5px);
   z-index: 9;
-  pointer-events: none; /* let pointer events pass to steps */
+  pointer-events: none;
+  /* let pointer events pass to steps */
 }
 
 article {
@@ -180,9 +181,9 @@ article {
 .step {
   margin: 0 0 50vh 0;
   /* Spacing between steps */
-  min-height: 100vh;
+  min-height: 200vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
   opacity: 0;
   transition: opacity 0.5s ease-in-out;
@@ -200,7 +201,9 @@ article {
 
 .text-content {
   /* Let the persistent backdrop provide the background; keep padding for readability */
-  position: relative;
+  position: sticky;
+  top: 50vh;
+  transform: translateY(-50%);
   margin: 0 auto;
   width: 100%;
   box-shadow: none;
@@ -257,5 +260,103 @@ article {
   #time-controls {
     bottom: 10px;
     width: 95%;
+  }
+}
+
+
+
+/* Inline Graphs */
+#line-graph-viz,
+#bar-chart-viz {
+  width: 100%;
+  height: 250px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  margin: 15px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#line-graph-viz svg text,
+#bar-chart-viz div {
+  font-family: 'Inter', sans-serif;
+  color: #e0e0e0;
+}
+
+/* Interaction Overlay */
+#interaction-overlay {
+  position: fixed;
+  top: 20vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  pointer-events: none;
+  text-align: center;
+}
+
+#feedback-message {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#feedback-message.visible {
+  opacity: 1;
+}
+
+
+/* Region Interaction Styles */
+.region-group {
+  transition: all 0.3s ease;
+}
+
+.region-group:hover .region-circle {
+  fill: rgba(43, 156, 133, 0.4);
+  stroke: #2b9c85;
+  stroke-width: 2px;
+}
+
+.region-circle {
+  transition: all 0.3s ease;
+}
+
+/* Utility Classes */
+.cursor-crosshair {
+  cursor: crosshair !important;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  article {
+    align-items: center;
+    padding-right: 0;
+  }
+
+  .text-content {
+    margin: 0 16px;
+  }
+
+  #time-controls {
+    bottom: 10px;
+    width: 95%;
+  }
+
+  #line-graph-container {
+    width: 90vw;
+    left: 5vw;
+    top: 10vh;
+    height: 40vh;
+  }
+
+  #region-results {
+    width: 90vw;
+    left: 5vw;
+    bottom: 10vh;
   }
 }

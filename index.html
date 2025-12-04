@@ -31,65 +31,175 @@
         <div id="globe-container">
           <!-- SVG will be injected here by script.js -->
         </div>
+
+        <!-- General Interaction Feedback -->
+        <div id="interaction-overlay" class="hidden">
+          <div id="feedback-message"></div>
+        </div>
+
         <div id="scrolly">
           <article>
-            <!-- Intro Section: January Data -->
-            <div class="step" data-step="intro">
+            <!-- Scene 1: Title & Globe Intro -->
+            <div class="step" data-step="scene1">
               <div class="text-content">
-                <h2>Early Season: January 2024</h2>
+                <h2>Why Are Hurricanes So Hard to Predict?</h2>
                 <p>
-                  The year began with typical winter patterns. In January,
-                  precipitation was largely driven by frontal systems moving
-                  across the continent.
-                </p>
-                <p>
-                  The Atlantic basin remained quiet, as is expected during the
-                  winter months.
+                  2024 was a year defined by hurricanes — and their unpredictability.
+                  But what makes predicting a hurricane so challenging?
                 </p>
               </div>
             </div>
 
-            <!-- Filler Section: Transition from Jan to Sept -->
-            <div class="step" data-step="transition">
+            <!-- Scene 2: Helene Appears -->
+            <div class="step" data-step="scene2">
               <div class="text-content">
-                <h2>The Season Progresses</h2>
+                <h2>Enter Hurricane Helene</h2>
                 <p>
-                  As spring turned to summer, the ocean waters warmed, setting
-                  the stage for tropical development.
+                  We’ll walk through three forecasting challenges using Hurricane Helene.
+                </p>
+                <ul>
+                  <li>Intensity</li>
+                  <li>Track</li>
+                  <li>Rainfall</li>
+                </ul>
+                <p>You’ll make predictions — just like real forecasters.</p>
+              </div>
+            </div>
+
+            <!-- Scene 3: Line Graph Enters -->
+            <div class="step" data-step="scene3">
+              <div class="text-content">
+                <h2>Challenge 1: Intensity</h2>
+                <p>
+                  A hurricane’s rainfall rate — its intensity — is one of the hardest things to forecast.
                 </p>
                 <p>
-                  Scroll down to fast-forward to the peak of the hurricane
-                  season.
+                  Below is Helene’s early rainfall trend over Florida.
                 </p>
               </div>
             </div>
 
-            <!-- Hurricane Helene Section: September Data -->
-            <div class="step" data-step="helene">
+            <!-- Scene 4: User Guess Prompt (Intensity) -->
+            <div class="step" data-step="scene4" data-behavior="guess-intensity">
               <div class="text-content">
-                <h2>Hurricane Helene: Late September</h2>
+                <h2>Your Turn</h2>
                 <p>
-                  By late September, activity exploded. Hurricane Helene formed
-                  and rapidly intensified, moving northward through the Gulf of
-                  Mexico.
+                  <strong>When do you think Helene’s rainfall will exceed 35 mm/hr in Florida?</strong>
                 </p>
+                <div id="line-graph-viz"></div>
                 <p>
-                  Watch the massive swirl of precipitation as it makes landfall
-                  and moves inland, bringing torrential rains.
+                  Click on the timeline to make your guess.
+                </p>
+                <p id="reality-text" style="display: none; margin-top: 15px; font-style: italic; color: #2b9c85;">
+                  Models had difficulty predicting this spike — intensity forecasting is full of uncertainty.
                 </p>
               </div>
             </div>
 
-            <div class="step" data-step="conclusion">
+            <!-- Scene 5: Reveal (Intensity) -->
+            <div class="step" data-step="scene5">
               <div class="text-content">
-                <h2>Aftermath & Conclusion</h2>
+                <h2>The Reality</h2>
                 <p>
-                  The storm's remnants continued to dump rain as they dissipated
-                  over land.
+                  Models had difficulty predicting this jump — intensity forecasting is full of uncertainty.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 6: Return to Globe -->
+            <div class="step" data-step="scene6">
+              <div class="text-content">
+                <h2>Challenge 2: Track</h2>
+                <p>
+                  Next: forecasting where a hurricane will go.
+                  Small track errors can shift landfall by hundreds of miles.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 7: Expert Cone Appears -->
+            <div class="step" data-step="scene7">
+              <div class="text-content">
+                <h2>The Forecast Cone</h2>
+                <p>
+                  Here’s the expert forecast cone for Helene. But models don’t always agree.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 8: User Guess Prompt (Track) -->
+            <div class="step" data-step="scene8" data-behavior="guess-track">
+              <div class="text-content">
+                <h2>Your Turn</h2>
+                <p>
+                  Based on the wind flow and the cone, <strong>where do you think Helene will be in 12 hours?</strong>
                 </p>
                 <p>
-                  This visualization highlights the scale and intensity of such
-                  events captured by geostationary satellites.
+                  Click anywhere on the map.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 9: Reveal (Track) -->
+            <div class="step" data-step="scene9">
+              <div class="text-content">
+                <h2>Track Uncertainty</h2>
+                <p>
+                  Forecast models disagree — and so do we.
+                  Track forecasts carry major uncertainty, especially early on.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 10: Rainfall Prediction Map -->
+            <div class="step" data-step="scene10">
+              <div class="text-content">
+                <h2>Challenge 3: Rainfall Distribution</h2>
+                <p>
+                  Finally: predicting where the worst rainfall will fall.
+                  Even tiny track shifts can reshape the rainfall footprint completely.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 11: User Guess Prompt (Rainfall) -->
+            <div class="step" data-step="scene11" data-behavior="guess-regions">
+              <div class="text-content">
+                <h2>Your Turn</h2>
+                <p>
+                  <strong>Which region do you think will get the worst rainfall from Helene?</strong>
+                </p>
+                <p>
+                  Select an area on the map.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 12: Reveal (Rainfall) -->
+            <div class="step" data-step="scene12">
+              <div class="text-content">
+                <h2>Complex Factors</h2>
+                <p>
+                  Forecast models often misplace rainfall because it depends on storm speed, track wobble, and moisture inflow.
+                </p>
+                <div id="bar-chart-viz"></div>
+              </div>
+            </div>
+
+            <!-- Scene 13: Wrap-Up -->
+            <div class="step" data-step="scene13">
+              <div class="text-content">
+                <h2>Summary</h2>
+                <p>
+                  Hurricane prediction is difficult because every forecast involves uncertainty:
+                </p>
+                <ul>
+                  <li><strong>Intensity</strong>: When will rainfall spike?</li>
+                  <li><strong>Track</strong>: Where will the storm travel?</li>
+                  <li><strong>Rainfall</strong>: Who gets the worst impacts?</li>
+                </ul>
+                <p>
+                  Helene’s unpredictability made it dangerous — and this is true for many storms.
                 </p>
               </div>
             </div>
