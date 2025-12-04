@@ -2,9 +2,12 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm";
 import { loadDailyRRQPE } from "./rrqpe_daily.js";
 import { preload6hrRRQPE } from "./rrqpe6hr.js";
+import { loadDMWData } from "./dmw_data.js";
 
 // globals to track
 let rrqpeData = null;
+let dmwData = null;
+let currentFeature = "rainfall"; // 'rainfall' or 'wind'
 let currDateTime = null;
 let currFrameidx = 0;
 
@@ -12,6 +15,7 @@ let currFrameidx = 0;
 let svg, canvas, ctx, projection, path, graticule, landGroup, globeContainer;
 let width, height;
 let rrqpeMax, rrqpeMin;
+let dmwMax, dmwMin;
 let n6hrFrames;
 
 // interaction state variables
@@ -125,7 +129,12 @@ function initLineGraph() {
   const FL_LON_MIN = -87.6,
     FL_LON_MAX = -80.0;
 
-  floridaMeanData = rrqpeData.map((d) => {
+  floridaMeanData = rrqpeData
+    .filter((d) => {
+      const date = new Date(d.datetime);
+      return date.getMinutes() === 0 && date.getSeconds() === 0;
+    })
+    .map((d) => {
     let sum = 0;
     let count = 0;
     for (let i = 0; i < d.lons.length; i++) {
@@ -145,6 +154,11 @@ function initLineGraph() {
       date: new Date(d.datetime),
       value: count > 0 ? sum / count : 0,
     };
+  }).filter(d => {
+    const date = d.date;
+    const startDate = new Date(date.getFullYear(), 8, 21);
+    const endDate = new Date(date.getFullYear(), 8, 29, 23, 59, 59);
+    return date >= startDate && date <= endDate;
   });
 
   const container = d3.select("#line-graph-viz");
@@ -178,18 +192,17 @@ function initLineGraph() {
 
   svgGraph.append("g").call(d3.axisLeft(y));
 
-  // Initial line (partial)
   const line = d3
     .line()
     .x((d) => x(d.date))
     .y((d) => y(d.value));
+  const partialData = floridaMeanData.filter(d => {
+    const cutoffDate = new Date(d.date.getFullYear(), 8, 25, 12, 0, 0);
+    return d.date <= cutoffDate;
+  });
 
-  // Only show first 20% of data initially
-  const partialData = floridaMeanData.slice(
-    0,
-    Math.floor(floridaMeanData.length * 0.2)
-  );
-
+  console.log(partialData);
+  console.log(floridaMeanData);
   svgGraph
     .append("path")
     .datum(partialData)
@@ -565,7 +578,7 @@ function renderRRQPEFrame(frame) {
   const lats = frame.lats;
   const vals = frame.vals;
 
-  const pointSize = 2;
+  const pointSize = 4;
   const rotate = projection.rotate();
   const centerLon = -rotate[0];
   const centerLat = -rotate[1];
@@ -595,11 +608,79 @@ function renderRRQPEFrame(frame) {
   }
 }
 
+function renderDMWFrame(frame) {
+  ctx.clearRect(0, 0, width, height);
+
+  if (!frame) {
+    // console.warn("renderDMWFrame: frame is null/undefined");
+    return;
+  }
+
+  const lons = frame.lons;
+  const lats = frame.lats;
+  const vals = frame.vals;
+
+  const pointSize = 4;
+  const rotate = projection.rotate();
+  const centerLon = -rotate[0];
+  const centerLat = -rotate[1];
+
+  for (let i = 0; i < lons.length; i++) {
+    const lon = lons[i];
+    const lat = lats[i];
+    const v = vals[i];
+
+    const dist = d3.geoDistance([lon, lat], [centerLon, centerLat]);
+    if (dist > Math.PI / 2) continue;
+
+    const projected = projection([lon, lat]);
+    if (!projected) continue;
+
+    const [x, y] = projected;
+
+    if (x < -10 || x >= width + 10 || y < -10 || y >= height + 10) continue;
+
+    ctx.globalAlpha = 0.9;
+    // Use a different color scale for wind, e.g., Magma or Inferno
+    ctx.fillStyle = d3.interpolateInferno(
+      d3.scaleLinear().domain([dmwMin, dmwMax]).clamp(true)(v)
+    );
+    ctx.fillRect(x, y, pointSize, pointSize);
+  }
+}
+
 function redraw() {
   svg.selectAll(".sphere").attr("d", path);
   svg.selectAll(".graticule").attr("d", path);
   landGroup.selectAll("path.land").attr("d", path);
-  if (currFrameidx !== null) renderRRQPEFrame(rrqpeData[currFrameidx]);
+  
+  if (currentFeature === "rainfall") {
+    if (currFrameidx !== null) renderRRQPEFrame(rrqpeData[currFrameidx]);
+  } else {
+    // Find closest DMW frame
+    if (dmwData && dmwData.length > 0) {
+      // Simple linear search or just find based on time
+      // Since DMW is 3-hourly and RRQPE is 6-hourly/hourly, we need to match times
+      // We can find the frame with the smallest time difference
+      let closestFrame = null;
+      let minDiff = Infinity;
+      
+      for(const frame of dmwData) {
+        const diff = Math.abs(new Date(frame.datetime) - currDateTime);
+        if(diff < minDiff) {
+          minDiff = diff;
+          closestFrame = frame;
+        }
+      }
+      
+      // Only show if within reasonable threshold (e.g. 1.5 hours)
+      if (minDiff < 1.5 * 60 * 60 * 1000) {
+        renderDMWFrame(closestFrame);
+      } else {
+        ctx.clearRect(0, 0, width, height); // Clear if no matching data
+      }
+    }
+  }
 
   // Re-draw interaction results
   if (interactionMode === "guess-regions") {
@@ -824,9 +905,12 @@ function initScrollytelling(numFrames) {
 }
 
 // legend for color scale
-function initColorScale() {
+function initColorScale(title, min, max, interpolator) {
   const legendWidth = 20;
   const legendHeight = 300;
+
+  // Clear existing
+  d3.select("#color-legend").html("");
 
   // Container
   const legend = d3
@@ -848,14 +932,14 @@ function initColorScale() {
   // One mapping scale for ramp position -> actual data value
   const valueScale = d3
     .scaleLinear()
-    .domain([rrqpeMin, rrqpeMax])
+    .domain([min, max])
     .range([1, 0]); // top is max, bottom is min
 
-  // Color interpolator (Turbo, Viridis, or your preference)
+  // Color interpolator
   const colorScale = d3
     .scaleSequential()
     .domain([1, 0])
-    .interpolator(d3.interpolateTurbo);
+    .interpolator(interpolator);
 
   // Draw gradient line by line
   for (let y = 0; y < legendHeight; y++) {
@@ -875,12 +959,22 @@ function initColorScale() {
   labelContainer
     .append("div")
     .style("font-size", "12px")
-    .text(`${rrqpeMax.toFixed(1)}`);
+    .text(`${max.toFixed(1)}`);
+
+  // Add title in the middle (rotated) or side
+  // Let's add it to the side for now
+  const titleDiv = legend.append("div")
+      .style("writing-mode", "vertical-rl")
+      .style("transform", "rotate(180deg)")
+      .style("font-size", "12px")
+      .style("font-weight", "bold")
+      .style("margin-left", "5px")
+      .text(title);
 
   labelContainer
     .append("div")
     .style("font-size", "12px")
-    .text(`${rrqpeMin.toFixed(1)} mm/hr`);
+    .text(`${min.toFixed(1)}`);
 }
 
 function formatDate(dt) {
@@ -914,12 +1008,13 @@ async function init() {
   const overlay = document.getElementById("loading-overlay");
 
   // data loading
-  const [world, rrqpe6hr, rrqpeHourly] = await Promise.all([
+  const [world, rrqpe6hr, rrqpeHourly, dmwDataRaw] = await Promise.all([
     d3.json(
       "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json"
     ),
     preload6hrRRQPE(),
     loadDailyRRQPE(),
+    loadDMWData(),
   ]);
 
   // Merge datasets
@@ -928,6 +1023,13 @@ async function init() {
 
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
   rrqpeMin = d3.min(rrqpe, (d) => d3.min(d.vals));
+  
+  // Process DMW data
+  if (dmwDataRaw) {
+      dmwData = dmwDataRaw;
+      dmwMax = d3.max(dmwData, (d) => d3.max(d.vals));
+      dmwMin = d3.min(dmwData, (d) => d3.min(d.vals));
+  }
 
   rrqpeData = rrqpe;
   currFrameidx = 0;
@@ -936,7 +1038,22 @@ async function init() {
   // globe + canvas init
   initGlobe(world);
   initDragZoom();
-  initColorScale();
+  initColorScale("Rainfall Rate (mm/hr)", rrqpeMin, rrqpeMax, d3.interpolateTurbo);
+  
+  // Toggle Logic
+  const toggleBtn = document.getElementById("feature-toggle");
+  toggleBtn.addEventListener("click", () => {
+      if (currentFeature === "rainfall") {
+          currentFeature = "wind";
+          toggleBtn.textContent = "Switch to Rainfall";
+          initColorScale("Wind Speed (m/s)", dmwMin, dmwMax, d3.interpolateInferno);
+      } else {
+          currentFeature = "rainfall";
+          toggleBtn.textContent = "Switch to Wind Speed";
+          initColorScale("Rainfall Rate (mm/hr)", rrqpeMin, rrqpeMax, d3.interpolateTurbo);
+      }
+      redraw();
+  });
 
   // map whole-page scroll position 0..1 to slider frames 0..N-1
   initScrollytelling(rrqpeData.length);
