@@ -338,7 +338,7 @@ function drawTrackPrediction() {
       projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
     )
     .attr("r", 8)
-    .attr("fill", "rgba(0, 255, 17, 0.7)")
+    .attr("fill", "rgba(255, 0, 234, 0.7)")
     .attr("z", 999);
   if (prevTrackPrediction) {
     svg
@@ -360,7 +360,7 @@ function drawTrackPrediction() {
         "y2",
         projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
       )
-      .attr("stroke", "rgba(0, 255, 17, 0.7)")
+      .attr("stroke", "rgba(255, 0, 234, 0.7)")
       .attr("stroke-width", 2)
       .attr("z", 998);
   } else {
@@ -378,7 +378,7 @@ function drawTrackPrediction() {
         "y2",
         projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
       )
-      .attr("stroke", "rgba(0, 255, 17, 0.7)")
+      .attr("stroke", "rgba(255, 0, 234, 0.7)")
       .attr("stroke-width", 2)
       .attr("z", 998);
   }
