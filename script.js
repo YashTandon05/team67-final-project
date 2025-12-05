@@ -13,7 +13,17 @@ let currDateTime = null;
 let currFrameidx = 0;
 
 // globe rendering variables
-let svg, canvas, ctx, projection, path, graticule, landGroup, globeContainer;
+// svg layering: `baseSvg` holds the globe (sphere/graticule/land),
+// `canvas` renders heatmap frames, and `svg` is the overlay for interactions (track/regions)
+let baseSvg,
+  svg,
+  canvas,
+  ctx,
+  projection,
+  path,
+  graticule,
+  landGroup,
+  globeContainer;
 let width, height;
 let rrqpeMax, rrqpeMin;
 let dmwMax, dmwMin;
@@ -57,11 +67,17 @@ function initGlobe(world) {
   minScale = width * 0.2;
   maxScale = width * 1.5;
 
-  svg = globeContainer
+  // Background SVG: globe shapes drawn here (below the heatmap canvas)
+  baseSvg = globeContainer
     .append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
-    .attr("preserveAspectRatio", "xMidYMid meet");
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .style("position", "absolute")
+    .style("top", "0")
+    .style("left", "0")
+    .style("z-index", 1);
 
+  // Canvas for heatmap frames sits above the globe shapes
   canvas = globeContainer
     .append("canvas")
     .attr("width", width)
@@ -69,9 +85,20 @@ function initGlobe(world) {
     .style("position", "absolute")
     .style("top", "0")
     .style("left", "0")
-    .style("pointer-events", "none"); // allow SVG drag/zoom
+    .style("pointer-events", "none")
+    .style("z-index", 2);
 
   ctx = canvas.node().getContext("2d");
+
+  // Overlay SVG: interactions (track/regions) rendered above the canvas
+  svg = globeContainer
+    .append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .style("position", "absolute")
+    .style("top", "0")
+    .style("left", "0")
+    .style("z-index", 3);
 
   projection = d3
     .geoOrthographic()
@@ -83,19 +110,20 @@ function initGlobe(world) {
   path = d3.geoPath(projection);
   graticule = d3.geoGraticule();
 
-  svg
+  // Draw globe shapes on the background SVG
+  baseSvg
     .append("path")
     .datum({ type: "Sphere" })
     .attr("class", "sphere")
     .attr("d", path);
 
-  svg
+  baseSvg
     .append("path")
     .datum(graticule())
     .attr("class", "graticule")
     .attr("d", path);
 
-  landGroup = svg.append("g").attr("class", "land-group");
+  landGroup = baseSvg.append("g").attr("class", "land-group");
   const land = topojson.feature(world, world.objects.land);
   landGroup
     .selectAll("path")
@@ -655,8 +683,8 @@ function renderDMWFrame(frame) {
 }
 
 function redraw() {
-  svg.selectAll(".sphere").attr("d", path);
-  svg.selectAll(".graticule").attr("d", path);
+  baseSvg.selectAll(".sphere").attr("d", path);
+  baseSvg.selectAll(".graticule").attr("d", path);
   landGroup.selectAll("path.land").attr("d", path);
 
   if (currentFeature === "rainfall") {
@@ -819,7 +847,6 @@ function initScrollytelling(numFrames) {
       // Camera Movements
       if (step === "scene2" || step === "scene6" || step === "scene10") {
         // button toggle
-
         d3.select("#controls-container").classed("hidden", false);
 
         // Zoom to Helene
