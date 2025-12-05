@@ -290,7 +290,7 @@ let lastTrackResult = null;
 let firstTrackPoint = null;
 let currTrackPrediction = null; // {lon, lat}
 let prevTrackPrediction = null;
-let numPredictionMade = 0;
+let canPredict = false;
 function initTrackInteraction() {
   const currFrame = rrqpeData[currFrameidx];
   const centerCoord = getMaxRainfallCoord(currFrame);
@@ -325,6 +325,7 @@ function initTrackInteraction() {
 
 function drawTrackPrediction() {
   if (!currTrackPrediction) return;
+  if (!canPredict) return;
   svg
     .append("circle")
     .attr("class", "interaction-result track-prediction")
@@ -669,6 +670,8 @@ function handleMapClick(event) {
     currTrackPrediction = { lon, lat };
     console.log("Track Prediction:", currTrackPrediction);
     drawTrackPrediction();
+    interactionMode = "none";
+    canPredict = false;
   }
 }
 
@@ -739,10 +742,11 @@ function initScrollytelling(numFrames) {
         lastTrackResult = null;
         currTrackPrediction = null;
         prevTrackPrediction = null;
-        numPredictionMade = 0;
+        canPredict = false;
       }
       if (step === "scene6") {
         interactionMode = "guess-track";
+        canPredict = true;
         if (scrollDirection > 0) {
           initTrackInteraction();
         }
@@ -751,6 +755,7 @@ function initScrollytelling(numFrames) {
       if (step === "scene7") {
         // init Track Interaction
         interactionMode = "guess-track";
+        canPredict = true;
         if (scrollDirection > 0) {
           initTrackInteraction();
         }
@@ -758,6 +763,7 @@ function initScrollytelling(numFrames) {
 
       if (step === "scene8") {
         interactionMode = "guess-track";
+        canPredict = true;
         if (scrollDirection > 0) {
           initTrackInteraction();
         }
@@ -765,6 +771,7 @@ function initScrollytelling(numFrames) {
 
       if (step === "scene9") {
         interactionMode = "guess-track";
+        canPredict = true;
         if (scrollDirection > 0) {
           initTrackInteraction();
         }
@@ -788,7 +795,7 @@ function initScrollytelling(numFrames) {
         const targetTranslate = [width / 2, height / 2 - height * 0.15];
 
         d3.transition()
-          .duration(1500)
+          .duration(800)
           .tween("rotate", () => {
             const r = d3.interpolate(projection.rotate(), targetRotate);
             const s = d3.interpolate(projection.scale(), targetScale);
@@ -811,7 +818,7 @@ function initScrollytelling(numFrames) {
         d3.select("#controls-container").classed("hidden", true);
 
         d3.transition()
-          .duration(1500)
+          .duration(800)
           .tween("rotate", () => {
             const r = d3.interpolate(projection.rotate(), targetRotate);
             const s = d3.interpolate(projection.scale(), targetScale);

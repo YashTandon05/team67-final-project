@@ -290,7 +290,7 @@ article {
 }
 
 .text-content p {
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1.6;
   margin-bottom: 16px;
   opacity: 0.9;
@@ -398,6 +398,21 @@ article {
 
 .hidden {
   display: none !important;
+}
+
+#links {
+  text-decoration: none;
+}
+
+#links a {
+  text-decoration: none;
+  color: #2b9c85;
+  cursor: pointer;
+}
+
+#links a:hover {
+  color: #1e7463;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
