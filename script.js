@@ -7,6 +7,7 @@ import { loadDMWData } from "./dmw_data.js";
 // globals to track
 let rrqpeData = null;
 let dmwData = null;
+let rrqpeHelene = null;
 let currentFeature = "rainfall"; // 'rainfall' or 'wind'
 let currDateTime = null;
 let currFrameidx = 0;
@@ -200,8 +201,8 @@ function initLineGraph() {
     return d.date <= cutoffDate;
   });
 
-  console.log(partialData);
-  console.log(floridaMeanData);
+  // console.log(partialData);
+  // console.log(floridaMeanData);
   svgGraph
     .append("path")
     .datum(partialData)
@@ -263,97 +264,37 @@ function initLineGraph() {
 }
 
 // --- Interaction 2: Track ---
-function getFuturePath(startIndex, numFrames) {
-  const path = [];
-  for (let i = 0; i < numFrames; i++) {
-    const idx = Math.min(startIndex + i, rrqpeData.length - 1);
-    const center = getMaxRainfallCoord(rrqpeData[idx]);
-    path.push(center);
-  }
-  return path;
-}
 
-function drawExpertCone() {
-  // Calculate future path (8 points)
-  const futurePath = getFuturePath(currFrameidx, 8);
-  const currentCenter = getMaxRainfallCoord(rrqpeData[currFrameidx]);
-  const endpoint = futurePath[futurePath.length - 1];
-
-  // Draw 8 spaghetti-style tracks from current to endpoint
-  for (let i = 0; i < 8; i++) {
-    // Add slight variation to each track
-    const offset = (Math.random() - 0.5) * 0.5;
-    const trackPath = {
-      type: "LineString",
-      coordinates: [
-        currentCenter,
-        [endpoint[0] + offset, endpoint[1] + offset],
-      ],
-    };
-
-    svg
-      .append("path")
-      .datum(trackPath)
-      .attr("class", "interaction-result expert-cone")
-      .attr("d", path)
-      .attr("stroke", "rgba(46, 204, 113, 0.6)") // Green
-      .attr("stroke-width", 1.5)
-      .attr("fill", "none");
-  }
-
-  // Draw green endpoint
+let lastTrackResult = null;
+function initTrackInteraction() {
+  const currFrame = rrqpeData[currFrameidx];
+  const centerCoord = getMaxRainfallCoord(currFrame);
+  // Show marker at centerCoord
   svg
     .append("circle")
-    .attr("class", "interaction-result expert-cone")
-    .attr("cx", projection(endpoint)[0])
-    .attr("cy", projection(endpoint)[1])
-    .attr("r", 6)
-    .attr("fill", "#2ecc71")
-    .attr("stroke", "white")
-    .attr("stroke-width", 2);
-}
+    .attr("class", "interaction-result true-center")
+    .attr("cx", projection(centerCoord)[0])
+    .attr("cy", projection(centerCoord)[1])
+    .attr("r", 8)
+    .attr("fill", "rgba(255, 0, 0, 0.7)")
+    .attr("z", 999);
 
-function drawTrackResult(user, actual) {
-  // Draw user's cone (8 spaghetti tracks to their guess)
-  const currentCenter = getMaxRainfallCoord(rrqpeData[currFrameidx]);
-
-  for (let i = 0; i < 8; i++) {
-    const offset = (Math.random() - 0.5) * 0.5;
-    const trackPath = {
-      type: "LineString",
-      coordinates: [currentCenter, [user.lon + offset, user.lat + offset]],
-    };
-
+  // draw line between current center and last
+  if (lastTrackResult) {
     svg
-      .append("path")
-      .datum(trackPath)
-      .attr("class", "interaction-result")
-      .attr("d", path)
-      .attr("stroke", "rgba(231, 76, 60, 0.6)") // Red
-      .attr("stroke-width", 1.5)
-      .attr("fill", "none");
+      .append("line")
+      .attr("class", "interaction-result track-line")
+      .attr("x1", projection(lastTrackResult)[0])
+      .attr("y1", projection(lastTrackResult)[1])
+      .attr("x2", projection(centerCoord)[0])
+      .attr("y2", projection(centerCoord)[1])
+      .attr("stroke", "rgba(255, 0, 0, 0.7)")
+      .attr("stroke-width", 2)
+      .attr("z", 998);
   }
 
-  // Draw red endpoint (user's guess)
-  svg
-    .append("circle")
-    .attr("class", "interaction-result")
-    .attr("cx", projection([user.lon, user.lat])[0])
-    .attr("cy", projection([user.lon, user.lat])[1])
-    .attr("r", 6)
-    .attr("fill", "#e74c3c")
-    .attr("stroke", "white")
-    .attr("stroke-width", 2);
-
-  // Draw dashed line from user guess to actual
-  svg
-    .append("path")
-    .datum({ type: "LineString", coordinates: [[user.lon, user.lat], actual] })
-    .attr("class", "interaction-result")
-    .attr("d", path)
-    .attr("stroke", "yellow")
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "4,4");
+  // update lastTrackResult
+  lastTrackResult = centerCoord;
 }
 
 // --- Interaction 3: Regions ---
@@ -822,17 +763,6 @@ function initScrollytelling(numFrames) {
       const step = response.element.dataset.step;
       const behavior = response.element.dataset.behavior;
 
-      // Reset interactions
-      // Clear expert cone if not in track section (Scene 7, 8, 9)
-      if (step !== "scene7" && step !== "scene8" && step !== "scene9") {
-        svg.selectAll(".expert-cone").remove();
-      }
-
-      // Clear other results if not in reveal steps
-      if (step !== "scene8" && step !== "scene9" && step !== "scene12") {
-        svg.selectAll(".interaction-result:not(.expert-cone)").remove();
-      }
-
       d3.select("#globe-container").classed("cursor-crosshair", false);
       interactionMode = "none";
 
@@ -848,8 +778,31 @@ function initScrollytelling(numFrames) {
         if (floridaMeanData.length === 0) initLineGraph();
       }
 
+      if (
+        step !== "scene6" &&
+        step !== "scene7" &&
+        step !== "scene8" &&
+        step !== "scene9"
+      ) {
+        // Clear previous interaction results
+        clearInteractionResults();
+        lastTrackResult = null;
+      }
+      if (step === "scene6") {
+        initTrackInteraction();
+      }
+
       if (step === "scene7") {
-        drawExpertCone();
+        // init Track Interaction
+        initTrackInteraction();
+      }
+
+      if (step === "scene8") {
+        initTrackInteraction();
+      }
+
+      if (step === "scene9") {
+        initTrackInteraction();
       }
 
       if (behavior === "guess-intensity") {
@@ -1088,6 +1041,7 @@ async function init() {
 
   // Merge datasets
   n6hrFrames = rrqpe6hr.length;
+  rrqpeHelene = rrqpeHourly;
   const rrqpe = [...rrqpe6hr, ...rrqpeHourly];
 
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));

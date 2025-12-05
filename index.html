@@ -21,7 +21,7 @@
         </p>
       </header>
 
-      <div id="loading-overlay">Loading precipitation data…</div>
+      <div id="loading-overlay">Loading data…</div>
       <div id="datetime-display">
         <div id="date"></div>
         <div id="time"></div>
@@ -152,8 +152,16 @@
               <div class="text-content">
                 <h2>Challenge 2: Track</h2>
                 <p>
-                  Next: forecasting where a hurricane will go. Small track
-                  errors can shift landfall by hundreds of miles.
+                  Next: forecasting where a hurricane will go. Here's an
+                  approximate center of the storm. Can you guys the path of the
+                  storm over the next 36 hours? Click anywhere on the map to
+                  cast your prediction.
+                </p>
+
+                <p>
+                  Also, try visualizing <strong>wind speed</strong> and
+                  direction by toggling the button in the top right. Does that
+                  help your prediction?
                 </p>
               </div>
             </div>
@@ -161,10 +169,10 @@
             <!-- Scene 7: Expert Cone Appears -->
             <div class="step" data-step="scene7">
               <div class="text-content">
-                <h2>The Forecast Cone</h2>
+                <h2>How did you do?</h2>
                 <p>
-                  Here’s the expert forecast cone for Helene. But models don’t
-                  always agree.
+                  You're approximate path is shown in red, and the official path
+                  is shown in green.
                 </p>
               </div>
             </div>
@@ -172,24 +180,21 @@
             <!-- Scene 8: User Guess Prompt (Track) -->
             <div class="step" data-step="scene8" data-behavior="guess-track">
               <div class="text-content">
-                <h2>Your Turn</h2>
-                <p>
-                  Based on the wind flow and the cone,
-                  <strong
-                    >where do you think Helene will be in 12 hours?</strong
-                  >
-                </p>
-                <p>Click anywhere on the map.</p>
+                <h2>Try again!</h2>
               </div>
             </div>
 
             <!-- Scene 9: Reveal (Track) -->
             <div class="step" data-step="scene9">
               <div class="text-content">
-                <h2>Track Uncertainty</h2>
+                <h2>Your final shot!</h2>
                 <p>
-                  Forecast models disagree — and so do we. Track forecasts carry
-                  major uncertainty, especially early on.
+                  How did your guess compare to the official track over 36
+                  hours? Do you have a future in hurricane forecasting?
+                </p>
+                <p>
+                  Track forecasting is difficult because small shifts in the
+                  storm’s center can lead to large changes in impact areas.
                 </p>
               </div>
             </div>
