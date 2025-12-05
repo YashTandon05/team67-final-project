@@ -46,7 +46,6 @@ let lastTime = Date.now();
 // NEW: Interaction States & Data
 let interactionMode = "none"; // 'none', 'guess-intensity', 'guess-track'
 let floridaMeanData = []; // [{date, value}, ...]
-let trackPrediction = null; // {lon, lat}
 let isGlobeInteractionEnabled = true; // New flag
 
 function initGlobe(world) {
@@ -288,6 +287,10 @@ function initLineGraph() {
 // --- Interaction 2: Track ---
 
 let lastTrackResult = null;
+let firstTrackPoint = null;
+let currTrackPrediction = null; // {lon, lat}
+let prevTrackPrediction = null;
+let numPredictionMade = 0;
 function initTrackInteraction() {
   const currFrame = rrqpeData[currFrameidx];
   const centerCoord = getMaxRainfallCoord(currFrame);
@@ -313,10 +316,72 @@ function initTrackInteraction() {
       .attr("stroke", "rgba(255, 0, 0, 0.7)")
       .attr("stroke-width", 2)
       .attr("z", 998);
+  } else {
+    firstTrackPoint = centerCoord;
   }
-
   // update lastTrackResult
   lastTrackResult = centerCoord;
+}
+
+function drawTrackPrediction() {
+  if (!currTrackPrediction) return;
+  svg
+    .append("circle")
+    .attr("class", "interaction-result track-prediction")
+    .attr(
+      "cx",
+      projection([currTrackPrediction.lon, currTrackPrediction.lat])[0]
+    )
+    .attr(
+      "cy",
+      projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
+    )
+    .attr("r", 8)
+    .attr("fill", "rgba(0, 255, 17, 0.7)")
+    .attr("z", 999);
+  if (prevTrackPrediction) {
+    svg
+      .append("line")
+      .attr("class", "interaction-result track-prediction-line")
+      .attr(
+        "x1",
+        projection([prevTrackPrediction.lon, prevTrackPrediction.lat])[0]
+      )
+      .attr(
+        "y1",
+        projection([prevTrackPrediction.lon, prevTrackPrediction.lat])[1]
+      )
+      .attr(
+        "x2",
+        projection([currTrackPrediction.lon, currTrackPrediction.lat])[0]
+      )
+      .attr(
+        "y2",
+        projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
+      )
+      .attr("stroke", "rgba(0, 255, 17, 0.7)")
+      .attr("stroke-width", 2)
+      .attr("z", 998);
+  } else {
+    // line from firstTrackPoint to current prediction
+    svg
+      .append("line")
+      .attr("class", "interaction-result track-prediction-line")
+      .attr("x1", projection(firstTrackPoint)[0])
+      .attr("y1", projection(firstTrackPoint)[1])
+      .attr(
+        "x2",
+        projection([currTrackPrediction.lon, currTrackPrediction.lat])[0]
+      )
+      .attr(
+        "y2",
+        projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
+      )
+      .attr("stroke", "rgba(0, 255, 17, 0.7)")
+      .attr("stroke-width", 2)
+      .attr("z", 998);
+  }
+  prevTrackPrediction = currTrackPrediction;
 }
 
 function clearInteractionResults() {
@@ -601,23 +666,9 @@ function handleMapClick(event) {
   const [lon, lat] = coords;
 
   if (interactionMode === "guess-track") {
-    trackPrediction = { lon, lat };
-
-    // Calculate actual position (approx 12 hours later)
-    const targetIdx = Math.min(currFrameidx + 8, rrqpeData.length - 1);
-    const actualCenter = getMaxRainfallCoord(rrqpeData[targetIdx]);
-
-    const distKm = Math.round(d3.geoDistance([lon, lat], actualCenter) * 6371);
-
-    showFeedback(`Prediction placed!`);
-
-    interactionMode = "none";
-    d3.select("#globe-container").classed("cursor-crosshair", false);
-
-    // Auto-scroll
-    setTimeout(() => {
-      scrollToStep("scene9");
-    }, 1500);
+    currTrackPrediction = { lon, lat };
+    console.log("Track Prediction:", currTrackPrediction);
+    drawTrackPrediction();
   }
 }
 
@@ -667,6 +718,9 @@ function initScrollytelling(numFrames) {
         isGlobeInteractionEnabled = true; // Enable for intro
       } else {
         isGlobeInteractionEnabled = false; // Disable for story
+        baseSvg.style("pointer-events", "none");
+        canvas.style("pointer-events", "none");
+        svg.style("pointer-events", "auto");
       }
 
       if (step === "scene3" || step === "scene4" || step === "scene5") {
@@ -683,6 +737,9 @@ function initScrollytelling(numFrames) {
         // Clear previous interaction results
         clearInteractionResults();
         lastTrackResult = null;
+        currTrackPrediction = null;
+        prevTrackPrediction = null;
+        numPredictionMade = 0;
       }
       if (step === "scene6") {
         interactionMode = "guess-track";
@@ -693,24 +750,24 @@ function initScrollytelling(numFrames) {
 
       if (step === "scene7") {
         // init Track Interaction
+        interactionMode = "guess-track";
         if (scrollDirection > 0) {
           initTrackInteraction();
         }
-        interactionMode = "guess-track";
       }
 
       if (step === "scene8") {
+        interactionMode = "guess-track";
         if (scrollDirection > 0) {
           initTrackInteraction();
         }
-        interactionMode = "guess-track";
       }
 
       if (step === "scene9") {
+        interactionMode = "guess-track";
         if (scrollDirection > 0) {
           initTrackInteraction();
         }
-        interactionMode = "guess-track";
       }
 
       if (behavior === "guess-intensity") {
