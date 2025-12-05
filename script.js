@@ -34,6 +34,8 @@ let currentScale;
 let minScale;
 let maxScale;
 
+let scrollDirection = 0;
+
 let isDragging = false;
 let inertiaRotationSpeed = 0;
 
@@ -42,18 +44,10 @@ let lastDragX = null;
 let lastTime = Date.now();
 
 // NEW: Interaction States & Data
-let interactionMode = "none"; // 'none', 'guess-intensity', 'guess-track', 'guess-regions'
+let interactionMode = "none"; // 'none', 'guess-intensity', 'guess-track'
 let floridaMeanData = []; // [{date, value}, ...]
 let trackPrediction = null; // {lon, lat}
-let regionPrediction = null; // regionId
 let isGlobeInteractionEnabled = true; // New flag
-
-let regions = [
-  { id: "A", name: "Panhandle", center: [-85.5, 30.5], radius: 150 },
-  { id: "B", name: "Big Bend", center: [-83.5, 29.8], radius: 120 },
-  { id: "C", name: "Central FL", center: [-82.0, 28.5], radius: 150 },
-  { id: "D", name: "South FL", center: [-80.5, 26.0], radius: 150 },
-];
 
 function initGlobe(world) {
   // let CSS control positioning (sticky) for the globe container
@@ -323,125 +317,6 @@ function initTrackInteraction() {
 
   // update lastTrackResult
   lastTrackResult = centerCoord;
-}
-
-// --- Interaction 3: Regions ---
-function drawRegions() {
-  // Draw clickable circles for regions
-  svg.selectAll(".region-group").remove();
-
-  const g = svg
-    .selectAll(".region-group")
-    .data(regions)
-    .enter()
-    .append("g")
-    .attr("class", "region-group interaction-result")
-    .attr("cursor", "pointer")
-    .style("pointer-events", "all") // Ensure clickable
-    .on("mouseover", function (event, d) {
-      d3.select(this)
-        .select(".region-circle")
-        .attr("fill", "rgba(43, 156, 133, 0.4)")
-        .attr("stroke", "#2b9c85")
-        .attr("stroke-width", 2);
-    })
-    .on("mouseout", function (event, d) {
-      d3.select(this)
-        .select(".region-circle")
-        .attr("fill", "rgba(255, 255, 255, 0.1)")
-        .attr("stroke", "rgba(255, 255, 255, 0.5)")
-        .attr("stroke-width", 1);
-    })
-    .on("click", function (event, d) {
-      event.stopPropagation();
-      if (interactionMode !== "guess-regions") return;
-
-      console.log("Region clicked:", d.id);
-      regionPrediction = d.id;
-      showFeedback(`You selected: ${d.name}`);
-
-      const actualRegionId = "B";
-      drawRegionResult(
-        d,
-        regions.find((r) => r.id === actualRegionId)
-      );
-      interactionMode = "none";
-      d3.select("#globe-container").classed("cursor-crosshair", false);
-
-      setTimeout(() => {
-        scrollToStep("scene12");
-      }, 1500);
-    });
-
-  g.append("circle")
-    .attr("class", "region-circle")
-    .attr("cx", (d) => projection(d.center)[0])
-    .attr("cy", (d) => projection(d.center)[1])
-    .attr("r", 30) // Fixed radius for better clickability
-    .attr("fill", "rgba(255, 255, 255, 0.1)")
-    .attr("stroke", "rgba(255, 255, 255, 0.5)")
-    .style("pointer-events", "all"); // Ensure clickable
-
-  // Add Labels A, B, C, D
-  g.append("text")
-    .attr("x", (d) => projection(d.center)[0])
-    .attr("y", (d) => projection(d.center)[1])
-    .attr("dy", "0.35em")
-    .attr("text-anchor", "middle")
-    .attr("fill", "white")
-    .attr("font-weight", "bold")
-    .attr("font-size", "16px")
-    .style("pointer-events", "none") // Let clicks pass to circle/group
-    .text((d) => d.id);
-}
-
-function drawRegionResult(userRegion, actualRegion) {
-  // Highlight actual
-  svg
-    .append("circle")
-    .attr("class", "interaction-result")
-    .attr("cx", projection(actualRegion.center)[0])
-    .attr("cy", projection(actualRegion.center)[1])
-    .attr("r", 20)
-    .attr("fill", "none")
-    .attr("stroke", "#00ff00")
-    .attr("stroke-width", 3);
-
-  // Show bar chart (Inline)
-  const container = d3.select("#bar-chart-viz");
-  container.selectAll("*").remove();
-
-  // Simple HTML bars
-  const data = [
-    { label: "A", val: 30 },
-    { label: "B", val: 95 }, // Big Bend
-    { label: "C", val: 45 },
-    { label: "D", val: 20 },
-  ];
-
-  data.forEach((d) => {
-    const row = container
-      .append("div")
-      .style("display", "flex")
-      .style("margin", "5px 0")
-      .style("align-items", "center");
-    row
-      .append("div")
-      .text(d.label)
-      .style("width", "20px")
-      .style("margin-right", "10px");
-    row
-      .append("div")
-      .style("width", d.val + "%")
-      .style("background", d.label === actualRegion.id ? "#2b9c85" : "#555")
-      .style("height", "20px")
-      .style("border-radius", "4px");
-    row
-      .append("div")
-      .text(d.val + "%")
-      .style("margin-left", "10px")
-      .style("font-size", "0.8rem");
-  });
 }
 
 function clearInteractionResults() {
@@ -714,11 +589,6 @@ function redraw() {
       }
     }
   }
-
-  // Re-draw interaction results
-  if (interactionMode === "guess-regions") {
-    drawRegions();
-  }
 }
 
 function handleMapClick(event) {
@@ -741,7 +611,6 @@ function handleMapClick(event) {
 
     showFeedback(`Prediction placed!`);
 
-    drawTrackResult(trackPrediction, actualCenter);
     interactionMode = "none";
     d3.select("#globe-container").classed("cursor-crosshair", false);
 
@@ -750,7 +619,6 @@ function handleMapClick(event) {
       scrollToStep("scene9");
     }, 1500);
   }
-  // Region clicks are now handled by the region group elements directly
 }
 
 function getMaxRainfallCoord(frame) {
@@ -817,20 +685,32 @@ function initScrollytelling(numFrames) {
         lastTrackResult = null;
       }
       if (step === "scene6") {
-        initTrackInteraction();
+        interactionMode = "guess-track";
+        if (scrollDirection > 0) {
+          initTrackInteraction();
+        }
       }
 
       if (step === "scene7") {
         // init Track Interaction
-        initTrackInteraction();
+        if (scrollDirection > 0) {
+          initTrackInteraction();
+        }
+        interactionMode = "guess-track";
       }
 
       if (step === "scene8") {
-        initTrackInteraction();
+        if (scrollDirection > 0) {
+          initTrackInteraction();
+        }
+        interactionMode = "guess-track";
       }
 
       if (step === "scene9") {
-        initTrackInteraction();
+        if (scrollDirection > 0) {
+          initTrackInteraction();
+        }
+        interactionMode = "guess-track";
       }
 
       if (behavior === "guess-intensity") {
@@ -838,14 +718,10 @@ function initScrollytelling(numFrames) {
       } else if (behavior === "guess-track") {
         interactionMode = "guess-track";
         d3.select("#globe-container").classed("cursor-crosshair", true);
-      } else if (behavior === "guess-regions") {
-        interactionMode = "guess-regions";
-        d3.select("#globe-container").classed("cursor-crosshair", true);
-        drawRegions();
       }
 
       // Camera Movements
-      if (step === "scene2" || step === "scene6" || step === "scene10") {
+      if (step === "scene2" || step === "scene6") {
         // button toggle
         d3.select("#controls-container").classed("hidden", false);
 
@@ -902,6 +778,9 @@ function initScrollytelling(numFrames) {
     const doc = document.documentElement;
     const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
     const scrollHeight = (doc.scrollHeight || 0) - window.innerHeight;
+    const newScrollDirection = scrollTop > (window.lastScrollTop || 0) ? 1 : -1;
+    window.lastScrollTop = scrollTop;
+    scrollDirection = newScrollDirection;
 
     if (scrollHeight <= 0) return;
 
