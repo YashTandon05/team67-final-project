@@ -41,11 +41,6 @@
           <!-- SVG will be injected here by script.js -->
         </div>
 
-        <!-- General Interaction Feedback -->
-        <div id="interaction-overlay" class="hidden">
-          <div id="feedback-message"></div>
-        </div>
-
         <div id="scrolly">
           <article>
             <!-- Scene 1: Title & Globe Intro -->
@@ -60,7 +55,7 @@
               </div>
             </div>
 
-            <div class="step" data-step="spacer">
+            <div class="step" data-step="spacer1">
               <div class="text-content">
                 <h2>The 2024 Hurricane Season</h2>
                 <p>
@@ -161,6 +156,16 @@
                   direction by toggling the button in the top right. Does that
                   help your prediction?
                 </p>
+                <p id="prediction-feedback"
+                  style="
+                    display: none;
+                    margin-top: 15px;
+                    font-style: italic;
+                    color: #2b9c85;
+                  "
+                  >
+                  Prediction placed! Keep scrolling to see how you did.
+                </p>
               </div>
             </div>
 
@@ -169,8 +174,7 @@
               <div class="text-content">
                 <h2>Try Again!</h2>
                 <p>
-                  You're approximate path is shown in red, and the official path
-                  is shown in green.
+                  The true path is shown in red and your predictions are shown in pink!
                 </p>
               </div>
             </div>

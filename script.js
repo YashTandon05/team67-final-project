@@ -212,6 +212,35 @@ function initLineGraph() {
     .call(d3.axisBottom(x).ticks(5));
 
   svgGraph.append("g").call(d3.axisLeft(y));
+  // vertical line at 50mm/hr
+  svgGraph
+    .append("line")
+    .attr("x1", 0)
+    .attr("x2", width)
+    .attr("y1", y(50))
+    .attr("y2", y(50))
+    .attr("stroke", "red")
+    .attr("stroke-dasharray", "4");
+
+  // axes labels
+  svgGraph
+    .append("text")
+    .attr("text-anchor", "end")
+    .attr("x", width)
+    .attr("y", height + margin.top + 10)
+    .text("Date")
+    .attr("fill", "white")
+    .attr("font-size", "15px");
+
+  svgGraph
+    .append("text")
+    .attr("text-anchor", "end")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -margin.left + 15)
+    .attr("x", -margin.top)
+    .text("Max Rainfall (mm/hr)")
+    .attr("fill", "white")
+    .attr("font-size", "15px");
 
   const line = d3
     .line()
@@ -222,8 +251,6 @@ function initLineGraph() {
     return d.date <= cutoffDate;
   });
 
-  // console.log(partialData);
-  // console.log(floridaMeanData);
   svgGraph
     .append("path")
     .datum(partialData)
@@ -521,7 +548,6 @@ function renderDMWFrame(frame) {
   ctx.clearRect(0, 0, width, height);
 
   if (!frame) {
-    // console.warn("renderDMWFrame: frame is null/undefined");
     return;
   }
 
@@ -536,8 +562,8 @@ function renderDMWFrame(frame) {
   const centerLat = -rotate[1];
 
   // Arrow styling
-  const arrowLength = 15; // Increased from 10
-  const arrowHeadSize = 5; // Increased from 3
+  const arrowLength = 15;
+  const arrowHeadSize = 5;
 
   for (let i = 0; i < lons.length; i++) {
     const lon = lons[i];
@@ -570,30 +596,9 @@ function renderDMWFrame(frame) {
     ctx.strokeStyle = ctx.fillStyle;
     ctx.lineWidth = 2.5; // Bolder lines
 
-    // Calculate rotation angle from u, v components
-    // Math.atan2(y, x) -> Math.atan2(v, u)
-    // Note: In canvas, y increases downwards. In geography/math, v (North) is positive y (up).
-    // However, the projection handles the mapping from lat/lon to x/y.
-    // We need the angle on the screen.
-    // A simple approximation is to assume North is Up (-y on screen) and East is Right (+x on screen).
-    // But on a globe, "North" direction changes based on location.
-    // For a proper implementation, we should project a second point slightly offset by the wind vector to get the screen angle.
-
-    // Let's project (lon, lat) and (lon + u_delta, lat + v_delta) to get screen angle.
-    // Since u, v are in m/s, we need to convert to degrees delta roughly.
-    // 1 deg lat ~ 111km. 1 m/s is very small in degrees.
-    // Let's just use a small epsilon for direction calculation.
-
     // Normalize vector
     const mag = Math.sqrt(uComp * uComp + vComp * vComp);
     if (mag === 0) continue;
-
-    // We can't just add u/v to lat/lon directly because u is zonal (East-West) and v is meridional (North-South).
-    // u is parallel to latitude circles, v is parallel to longitude lines.
-    // Simple approach:
-    // Target point in lat/lon space:
-    // dLat = v * scaling_factor
-    // dLon = u * scaling_factor / cos(lat)
 
     const scaling = 0.1; // arbitrary small step to determine direction
     const dLat = scaling * vComp;
@@ -672,6 +677,15 @@ function handleMapClick(event) {
     drawTrackPrediction();
     interactionMode = "none";
     canPredict = false;
+    const predictionFeedback = d3.select("#prediction-feedback");
+
+    predictionFeedback
+      .style("display", "block")
+      .style("opacity", 0)
+      .transition()
+      .delay(500)
+      .duration(500)
+      .style("opacity", 1);
   }
 }
 
@@ -687,14 +701,6 @@ function getMaxRainfallCoord(frame) {
   }
   if (maxIdx === -1) return [0, 0];
   return [frame.lons[maxIdx], frame.lats[maxIdx]];
-}
-
-function showFeedback(message) {
-  const overlay = d3.select("#feedback-message");
-  overlay.text(message).classed("visible", true);
-  setTimeout(() => {
-    overlay.classed("visible", false);
-  }, 4000);
 }
 
 // ---------- Scrollama Scrollytelling ----------
@@ -717,7 +723,7 @@ function initScrollytelling(numFrames) {
       interactionMode = "none";
 
       // Scene Logic
-      if (step === "scene1") {
+      if (step === "scene1" || step === "spacer1") {
         isGlobeInteractionEnabled = true; // Enable for intro
       } else {
         isGlobeInteractionEnabled = false; // Disable for story
@@ -770,8 +776,6 @@ function initScrollytelling(numFrames) {
       }
 
       if (step === "scene9") {
-        interactionMode = "guess-track";
-        canPredict = true;
         if (scrollDirection > 0) {
           initTrackInteraction();
         }
@@ -808,7 +812,7 @@ function initScrollytelling(numFrames) {
               redraw();
             };
           });
-      } else if (step === "scene1") {
+      } else if (step === "scene1" || step === "spacer1") {
         // Reset
         const targetScale = width * 0.2;
         const targetRotate = [80, 0];
@@ -816,6 +820,15 @@ function initScrollytelling(numFrames) {
 
         // button toggle
         d3.select("#controls-container").classed("hidden", true);
+        const toggleBtn = document.getElementById("feature-toggle");
+        currentFeature = "rainfall";
+        toggleBtn.textContent = "Switch to Wind Speed";
+        initColorScale(
+          "Rainfall Rate (mm/hr)",
+          rrqpeMin,
+          rrqpeMax,
+          d3.interpolateTurbo
+        );
 
         d3.transition()
           .duration(800)
@@ -850,7 +863,7 @@ function initScrollytelling(numFrames) {
 
     // Determine the document-space ranges for the early intro steps
     const scene1El = document.querySelector('.step[data-step="scene1"]');
-    const spacerEl = document.querySelector('.step[data-step="spacer"]');
+    const spacerEl = document.querySelector('.step[data-step="spacer1"]');
 
     // fall back to full-range mapping if elements are missing
     if (!scene1El || !spacerEl || !n6hrFrames || n6hrFrames <= 1) {
