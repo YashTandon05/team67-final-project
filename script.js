@@ -4,7 +4,6 @@ import { loadDailyRRQPE } from "./rrqpe_daily.js";
 import { preload6hrRRQPE } from "./rrqpe6hr.js";
 import { loadDMWData } from "./dmw_data.js";
 
-// globals to track
 let rrqpeData = null;
 let dmwData = null;
 let rrqpeHelene = null;
@@ -12,9 +11,6 @@ let currentFeature = "rainfall"; // 'rainfall' or 'wind'
 let currDateTime = null;
 let currFrameidx = 0;
 
-// globe rendering variables
-// svg layering: `baseSvg` holds the globe (sphere/graticule/land),
-// `canvas` renders heatmap frames, and `svg` is the overlay for interactions (track/regions)
 let baseSvg,
   svg,
   canvas,
@@ -29,7 +25,6 @@ let rrqpeMax, rrqpeMin;
 let dmwMax, dmwMin;
 let n6hrFrames;
 
-// interaction state variables
 let currentScale;
 let minScale;
 let maxScale;
@@ -43,24 +38,20 @@ let lastDragTime = null;
 let lastDragX = null;
 let lastTime = Date.now();
 
-// NEW: Interaction States & Data
 let interactionMode = "none"; // 'none', 'guess-intensity', 'guess-track'
-let floridaMeanData = []; // [{date, value}, ...]
-let isGlobeInteractionEnabled = true; // New flag
+let floridaMeanData = [];
+let isGlobeInteractionEnabled = true;
 
 function initGlobe(world) {
-  // let CSS control positioning (sticky) for the globe container
   globeContainer = d3.select("#globe-container");
   const rect = globeContainer.node().getBoundingClientRect();
 
   width = rect.width;
   height = rect.height;
-
   currentScale = width * 0.2;
   minScale = width * 0.2;
   maxScale = width * 1.5;
 
-  // Background SVG: globe shapes drawn here (below the heatmap canvas)
   baseSvg = globeContainer
     .append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
@@ -70,7 +61,6 @@ function initGlobe(world) {
     .style("left", "0")
     .style("z-index", 1);
 
-  // Canvas for heatmap frames sits above the globe shapes
   canvas = globeContainer
     .append("canvas")
     .attr("width", width)
@@ -83,7 +73,6 @@ function initGlobe(world) {
 
   ctx = canvas.node().getContext("2d");
 
-  // Overlay SVG: interactions (track/regions) rendered above the canvas
   svg = globeContainer
     .append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
@@ -103,7 +92,6 @@ function initGlobe(world) {
   path = d3.geoPath(projection);
   graticule = d3.geoGraticule();
 
-  // Draw globe shapes on the background SVG
   baseSvg
     .append("path")
     .datum({ type: "Sphere" })
@@ -125,11 +113,9 @@ function initGlobe(world) {
     .attr("class", "land")
     .attr("d", path);
 
-  // track whether the pointer is over the visualization (svg/canvas)
   globeContainer.on("pointerenter", () => (window.__pointerOverViz = true));
   globeContainer.on("pointerleave", () => (window.__pointerOverViz = false));
 
-  // Click handler for interactions
   svg.on("click", handleMapClick);
 }
 
@@ -143,9 +129,6 @@ function scrollToStep(stepName) {
 
 // --- Interaction 1: Line Graph ---
 function initLineGraph() {
-  // Florida Bounding Box (Approx)
-  // Lat: 24.5 to 31.0
-  // Lon: -87.6 to -80.0
   const FL_LAT_MIN = 24.5,
     FL_LAT_MAX = 31.0;
   const FL_LON_MIN = -87.6,
@@ -213,7 +196,6 @@ function initLineGraph() {
     .call(d3.axisBottom(x).ticks(5));
 
   svgGraph.append("g").call(d3.axisLeft(y));
-  // vertical line at 50mm/hr
   svgGraph
     .append("line")
     .attr("x1", 0)
@@ -223,7 +205,6 @@ function initLineGraph() {
     .attr("stroke", "red")
     .attr("stroke-dasharray", "4");
 
-  // axes labels
   svgGraph
     .append("text")
     .attr("text-anchor", "end")
@@ -261,7 +242,6 @@ function initLineGraph() {
     .attr("stroke-width", 2)
     .attr("d", line);
 
-  // Ruler Tool
   const rulerLine = svgGraph.append("line")
     .attr("class", "ruler-line")
     .attr("y1", 0).attr("y2", height)
@@ -274,8 +254,6 @@ function initLineGraph() {
     .attr("y", -5).attr("fill", "white").attr("font-size", "12px")
     .style("opacity", 0).style("pointer-events", "none");
 
-  // Overlay for hover interaction (Ruler/Guess)
-  // Since we removed the brush, we need a simple overlay rect to capture mouse events
   svgGraph.append("rect")
     .attr("class", "overlay")
     .attr("width", width)
@@ -345,16 +323,14 @@ function formatDateShort(date) {
   return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', hour12: true });
 }
 // --- Interaction 2: Track ---
-
 let lastTrackResult = null;
 let firstTrackPoint = null;
-let currTrackPrediction = null; // {lon, lat}
+let currTrackPrediction = null;
 let prevTrackPrediction = null;
 let canPredict = false;
 function initTrackInteraction() {
   const currFrame = rrqpeData[currFrameidx];
   const centerCoord = getMaxRainfallCoord(currFrame);
-  // Show marker at centerCoord
   svg
     .append("circle")
     .attr("class", "interaction-result true-center")
@@ -364,7 +340,6 @@ function initTrackInteraction() {
     .attr("fill", "rgba(255, 0, 0, 0.7)")
     .attr("z", 999);
 
-  // draw line between current center and last
   if (lastTrackResult) {
     svg
       .append("line")
@@ -379,7 +354,6 @@ function initTrackInteraction() {
   } else {
     firstTrackPoint = centerCoord;
   }
-  // update lastTrackResult
   lastTrackResult = centerCoord;
 }
 
@@ -424,7 +398,6 @@ function drawTrackPrediction() {
       .attr("stroke-width", 2)
       .attr("z", 998);
   } else {
-    // line from firstTrackPoint to current prediction
     svg
       .append("line")
       .attr("class", "interaction-result track-prediction-line")
@@ -449,11 +422,12 @@ function clearInteractionResults() {
   svg.selectAll(".interaction-result").remove();
 }
 
+// --- MAP INTERACTION FEATURES ---
 function initDragZoom() {
   const drag = d3
     .drag()
     .on("start", (event) => {
-      if (!isGlobeInteractionEnabled) return; // Disable interaction
+      if (!isGlobeInteractionEnabled) return;
       isDragging = true;
       svg.classed("dragging", true);
 
@@ -462,7 +436,7 @@ function initDragZoom() {
       lastDragX = event.x;
     })
     .on("drag", (event) => {
-      if (!isGlobeInteractionEnabled) return; // Disable interaction
+      if (!isGlobeInteractionEnabled) return;
       const rotate = projection.rotate();
       const k = 0.1;
 
@@ -481,7 +455,7 @@ function initDragZoom() {
       lastDragX = event.x;
     })
     .on("end", () => {
-      if (!isGlobeInteractionEnabled) return; // Disable interaction
+      if (!isGlobeInteractionEnabled) return;
       isDragging = false;
       svg.classed("dragging", false);
 
@@ -494,9 +468,8 @@ function initDragZoom() {
 
   svg.call(drag);
 
-  // Add zoom functionality with mouse wheel
   svg.on("wheel", function (event) {
-    if (!isGlobeInteractionEnabled) return; // Disable interaction
+    if (!isGlobeInteractionEnabled) return;
     event.preventDefault();
 
     const delta = event.deltaY;
@@ -533,9 +506,7 @@ function animate() {
   });
 }
 
-// intialize RRQPE rendering
 function renderRRQPEFrame(frame) {
-  // Clear canvas to transparent
   ctx.clearRect(0, 0, width, height);
 
   if (!frame) {
@@ -557,16 +528,13 @@ function renderRRQPEFrame(frame) {
     const lat = lats[i];
     const v = vals[i];
 
-    // Hemisphere culling: skip if point is on far side of globe
     const dist = d3.geoDistance([lon, lat], [centerLon, centerLat]);
-    if (dist > Math.PI / 2) continue; // outside visible hemisphere
+    if (dist > Math.PI / 2) continue;
 
     const projected = projection([lon, lat]);
     if (!projected) continue;
 
     const [x, y] = projected;
-
-    // Canvas bounds check as safety net
     if (x < -10 || x >= width + 10 || y < -10 || y >= height + 10) continue;
 
     ctx.globalAlpha = 0.9;
@@ -594,7 +562,6 @@ function renderDMWFrame(frame) {
   const centerLon = -rotate[0];
   const centerLat = -rotate[1];
 
-  // Arrow styling
   const arrowLength = 15;
   const arrowHeadSize = 5;
 
@@ -621,19 +588,17 @@ function renderDMWFrame(frame) {
     )
       continue;
 
-    ctx.globalAlpha = 1.0; // Increased opacity
-    // Use Plasma for better visibility on dark background (avoids black)
+    ctx.globalAlpha = 1.0;
     ctx.fillStyle = d3.interpolatePlasma(
       d3.scaleLinear().domain([dmwMin, dmwMax]).clamp(true)(v)
     );
     ctx.strokeStyle = ctx.fillStyle;
-    ctx.lineWidth = 2.5; // Bolder lines
+    ctx.lineWidth = 2.5;
 
-    // Normalize vector
     const mag = Math.sqrt(uComp * uComp + vComp * vComp);
     if (mag === 0) continue;
 
-    const scaling = 0.1; // arbitrary small step to determine direction
+    const scaling = 0.1;
     const dLat = scaling * vComp;
     const dLon = (scaling * uComp) / Math.cos((lat * Math.PI) / 180);
 
@@ -648,7 +613,6 @@ function renderDMWFrame(frame) {
     ctx.translate(x, y);
     ctx.rotate(angle);
 
-    // Draw arrow
     ctx.beginPath();
     ctx.moveTo(-arrowLength / 2, 0);
     ctx.lineTo(arrowLength / 2, 0);
@@ -669,11 +633,7 @@ function redraw() {
   if (currentFeature === "rainfall") {
     if (currFrameidx !== null) renderRRQPEFrame(rrqpeData[currFrameidx]);
   } else {
-    // Find closest DMW frame
     if (dmwData && dmwData.length > 0) {
-      // Simple linear search or just find based on time
-      // Since DMW is 3-hourly and RRQPE is 6-hourly/hourly, we need to match times
-      // We can find the frame with the smallest time difference
       let closestFrame = null;
       let minDiff = Infinity;
 
@@ -685,13 +645,16 @@ function redraw() {
         }
       }
 
-      // Only show if within reasonable threshold (e.g. 1.5 hours)
       if (minDiff < 1.5 * 60 * 60 * 1000) {
         renderDMWFrame(closestFrame);
       } else {
-        ctx.clearRect(0, 0, width, height); // Clear if no matching data
+        ctx.clearRect(0, 0, width, height);
       }
     }
+  }
+
+  if (!svg.selectAll(".region-marker").empty()) {
+    updateGlobeVisuals();
   }
 }
 
@@ -736,8 +699,7 @@ function getMaxRainfallCoord(frame) {
   return [frame.lons[maxIdx], frame.lats[maxIdx]];
 }
 
-// --- Resource Allocation Game ---
-
+// --- Interaction 3: Resource Allocation Game ---
 const floridaRegions = [
   { id: "panhandle", name: "Panhandle", lat: 30.5, lon: -85.5, rainImpact: 30, windImpact: 40, pop: 1 },
   { id: "bigbend", name: "Big Bend", lat: 29.8, lon: -83.5, rainImpact: 50, windImpact: 90, pop: 1 },
@@ -764,7 +726,6 @@ function initResourceGame() {
     const div = container.append("div").attr("class", "region-control");
     div.append("h4").text(region.name);
 
-    // Rain Slider
     const rainGroup = div.append("div").attr("class", "slider-group rain");
     rainGroup.append("label").html(`Rain: <span id="rain-val-${region.id}">0</span>`);
     rainGroup.append("input")
@@ -779,7 +740,6 @@ function initResourceGame() {
         }
       });
 
-    // Wind Slider
     const windGroup = div.append("div").attr("class", "slider-group wind");
     windGroup.append("label").html(`Wind: <span id="wind-val-${region.id}">0</span>`);
     windGroup.append("input")
@@ -822,7 +782,7 @@ function updateAllocation(regionId, type, value) {
   updateStats();
   updateGlobeVisuals();
 
-  return newValue; // Return clamped value
+  return newValue;
 }
 
 function updateStats() {
@@ -834,8 +794,6 @@ function updateStats() {
 }
 
 function renderRegionsOnGlobe() {
-  // Add regions to SVG
-  // Remove existing first
   svg.selectAll(".region-marker").remove();
 
   svg.selectAll(".region-marker")
@@ -852,15 +810,14 @@ function renderRegionsOnGlobe() {
 }
 
 function updateGlobeVisuals() {
-  // Update positions and styles based on allocation
   svg.selectAll(".region-marker")
     .attr("cx", d => projection([d.lon, d.lat]) ? projection([d.lon, d.lat])[0] : -100)
     .attr("cy", d => projection([d.lon, d.lat]) ? projection([d.lon, d.lat])[1] : -100)
     .attr("fill", d => {
       const r = allocatedRain[d.id];
       const w = allocatedWind[d.id];
-      if (r > w) return `rgba(59, 130, 246, ${0.3 + r / 100})`; // Blueish
-      if (w > r) return `rgba(239, 68, 68, ${0.3 + w / 100})`; // Reddish
+      if (r > w) return `rgba(59, 130, 246, ${0.3 + r / 100})`;
+      if (w > r) return `rgba(239, 68, 68, ${0.3 + w / 100})`;
       return "rgba(255,255,255,0.3)";
     })
     .attr("r", d => {
@@ -875,35 +832,17 @@ function submitPlan() {
   let feedback = "";
 
   floridaRegions.forEach(r => {
-    // Simple scoring: 
-    // Ideal allocation proportional to impact?
-    // Or penalty for missing impact?
-
-    // Let's say Score = 100 - weighted_error
-    // Error = |Allocated - Impact_Scaled| ?
-    // Impact is 0-100 scale roughly.
-    // Allocation is 0-50.
-    // Let's normalize impact to 0-50 for comparison.
-
     const targetRain = r.rainImpact / 2;
     const targetWind = r.windImpact / 2;
-
     const rainDiff = Math.abs(allocatedRain[r.id] - targetRain);
     const windDiff = Math.abs(allocatedWind[r.id] - targetWind);
-
-    // Weight by population
     const weight = r.pop;
 
     score += (100 - (rainDiff + windDiff)) * weight;
     maxScore += 100 * weight;
 
-    // Generate specific feedback for outliers
     if (r.id === "tampa" && allocatedRain[r.id] < 10) {
       feedback += `<p><strong>Tampa Bay</strong>: Heavy flooding occurred here. Your rain allocation was dangerously low.</p>`;
-    }
-    if (r.id === "bigbend" && allocatedWind[r.id] > 20) {
-      // feedback += `<p><strong>Big Bend</strong>: Good call on wind protection here.</p>`; 
-      // Actually Big Bend had huge surge, so high wind allocation is good.
     }
   });
 
@@ -932,7 +871,6 @@ function initScrollytelling(numFrames) {
       debug: false,
     })
     .onStepEnter((response) => {
-      // response = { element, index, direction }
       response.element.classList.add("is-active");
       const step = response.element.dataset.step;
       const behavior = response.element.dataset.behavior;
@@ -940,17 +878,26 @@ function initScrollytelling(numFrames) {
       d3.select("#globe-container").classed("cursor-crosshair", false);
       interactionMode = "none";
 
-      // Scene Logic
-      if (step === "scene1" || step === "spacer1") {
-        isGlobeInteractionEnabled = true; // Enable for intro
+      if (
+        step === "scene1" ||
+        step === "spacer1" ||
+        step === "scene10" ||
+        step === "scene11" ||
+        step === "scene12" ||
+        step === "scene13" ||
+        step === "scene14" ||
+        step === "scene15" ||
+        step === "scene16" ||
+        step === "scene17"
+      ) {
+        isGlobeInteractionEnabled = true;
       } else {
-        isGlobeInteractionEnabled = false; // Disable for story
+        isGlobeInteractionEnabled = false;
         baseSvg.style("pointer-events", "none");
         canvas.style("pointer-events", "none");
         svg.style("pointer-events", "auto");
       }
 
-      // Hide mini heatmap if not in Interaction 1
       if (step !== "scene3" && step !== "scene4" && step !== "scene5") {
         d3.select("#mini-heatmap-container").classed("hidden", true);
       }
@@ -959,23 +906,16 @@ function initScrollytelling(numFrames) {
         if (floridaMeanData.length === 0) initLineGraph();
       }
 
-      // Game Logic
       if (step === "scene10" || step === "scene11" || step === "scene12") {
-        // d3.select("#resource-game-ui").classed("hidden", false); // Removed
         if (Object.keys(allocatedRain).length === 0) initResourceGame();
-
-        // Sync Visualization: Set time to just before landfall (e.g., Frame ~30-35?)
-        // Helene landfall was Sept 26 late.
-        // rrqpeData starts Sept 21.
-        // Let's find a frame around Sept 26 18:00 UTC.
+        renderRegionsOnGlobe();
         const targetDate = new Date("2024-09-26T18:00:00Z");
         const targetIdx = rrqpeData.findIndex(d => new Date(d.datetime) >= targetDate);
         if (targetIdx !== -1 && currFrameidx !== targetIdx) {
           onFrameChange(targetIdx);
         }
 
-        // Zoom to Florida
-        const targetScale = width * 3;
+        const targetScale = width * 2;
         const targetRotate = [82, -28];
 
         d3.transition()
@@ -992,7 +932,6 @@ function initScrollytelling(numFrames) {
             };
           });
       } else {
-        // d3.select("#resource-game-ui").classed("hidden", true); // Removed
         svg.selectAll(".region-marker").remove();
       }
 
@@ -1045,7 +984,6 @@ function initScrollytelling(numFrames) {
         d3.select("#globe-container").classed("cursor-crosshair", true);
       }
 
-      // Camera Movements (Existing)
       if (step === "scene2" || step === "scene6") {
         d3.select("#controls-container").classed("hidden", false);
         const targetScale = width * 1.2;
@@ -1066,7 +1004,15 @@ function initScrollytelling(numFrames) {
               redraw();
             };
           });
-      } else if (step === "scene1" || step === "spacer1") {
+      } else if (
+        step === "scene1" ||
+        step === "spacer1" ||
+        step === "scene13" ||
+        step === "scene14" ||
+        step === "scene15" ||
+        step === "scene16" ||
+        step === "scene17"
+      ) {
         const targetScale = width * 0.2;
         const targetRotate = [80, 0];
         const targetTranslate = [width / 2, height / 2];
@@ -1102,7 +1048,6 @@ function initScrollytelling(numFrames) {
       response.element.classList.remove("is-active");
     });
 
-  // Continuous scroll listener (Existing)
   const onScroll = () => {
     const doc = document.documentElement;
     const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
@@ -1155,15 +1100,12 @@ function initScrollytelling(numFrames) {
   onScroll();
 }
 
-// legend for color scale
 function initColorScale(title, min, max, interpolator) {
   const legendWidth = 20;
   const legendHeight = 300;
 
-  // Clear existing
   d3.select("#color-legend").html("");
 
-  // Container
   const legend = d3
     .select("#color-legend")
     .style("display", "flex")
@@ -1171,7 +1113,6 @@ function initColorScale(title, min, max, interpolator) {
     .style("align-items", "center")
     .style("gap", "8px");
 
-  // Canvas for color ramp
   const canvas = legend
     .append("canvas")
     .attr("width", legendWidth)
@@ -1180,23 +1121,19 @@ function initColorScale(title, min, max, interpolator) {
 
   const ctx = canvas.node().getContext("2d");
 
-  // One mapping scale for ramp position -> actual data value
-  const valueScale = d3.scaleLinear().domain([min, max]).range([1, 0]); // top is max, bottom is min
+  const valueScale = d3.scaleLinear().domain([min, max]).range([1, 0]);
 
-  // Color interpolator
   const colorScale = d3
     .scaleSequential()
     .domain([1, 0])
     .interpolator(interpolator);
 
-  // Draw gradient line by line
   for (let y = 0; y < legendHeight; y++) {
-    const t = y / legendHeight; // 0 at top, 1 at bottom
+    const t = y / legendHeight;
     ctx.fillStyle = colorScale(t);
     ctx.fillRect(0, y, legendWidth, 1);
   }
 
-  // Add labels
   const labelContainer = legend
     .append("div")
     .style("display", "flex")
@@ -1209,8 +1146,6 @@ function initColorScale(title, min, max, interpolator) {
     .style("font-size", "12px")
     .text(`${max.toFixed(1)}`);
 
-  // Add title in the middle (rotated) or side
-  // Let's add it to the side for now
   const titleDiv = legend
     .append("div")
     .style("writing-mode", "vertical-rl")
@@ -1237,10 +1172,9 @@ function formatDate(dt) {
 }
 
 function onFrameChange(idx) {
-  currFrameidx = idx; // Update the global frame index
+  currFrameidx = idx;
   const frame = rrqpeData[idx];
 
-  // Update globally-tracked datetime
   currDateTime = new Date(frame.datetime);
 
   document.getElementById("date").textContent = formatDate(currDateTime);
@@ -1253,10 +1187,8 @@ function onFrameChange(idx) {
 }
 
 async function init() {
-  // loading overlay
   const overlay = document.getElementById("loading-overlay");
 
-  // data loading
   const [world, rrqpe6hr, rrqpeHourly, dmwDataRaw] = await Promise.all([
     d3.json(
       "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json"
@@ -1266,7 +1198,6 @@ async function init() {
     loadDMWData(),
   ]);
 
-  // Merge datasets
   n6hrFrames = rrqpe6hr.length;
   rrqpeHelene = rrqpeHourly;
   const rrqpe = [...rrqpe6hr, ...rrqpeHourly];
@@ -1274,7 +1205,6 @@ async function init() {
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
   rrqpeMin = d3.min(rrqpe, (d) => d3.min(d.vals));
 
-  // Process DMW data
   if (dmwDataRaw) {
     dmwData = dmwDataRaw;
     dmwMax = d3.max(dmwData, (d) => d3.max(d.vals));
@@ -1285,7 +1215,6 @@ async function init() {
   currFrameidx = 0;
   currDateTime = new Date(rrqpeData[0].datetime);
 
-  // globe + canvas init
   initGlobe(world);
   initDragZoom();
   initColorScale(
@@ -1295,7 +1224,6 @@ async function init() {
     d3.interpolateTurbo
   );
 
-  // Toggle Logic
   const toggleInput = document.getElementById("feature-toggle");
   toggleInput.addEventListener("change", (e) => {
     if (e.target.checked) {
@@ -1313,18 +1241,14 @@ async function init() {
     redraw();
   });
 
-  // map whole-page scroll position 0..1 to slider frames 0..N-1
   initScrollytelling(rrqpeData.length);
 
-  // Show Continue button when ready
   const continueBtn = document.getElementById("continue-btn");
   continueBtn.classList.remove("hidden");
-  // Force reflow/repaint if needed, but adding a class for fade-in is better
   setTimeout(() => continueBtn.classList.add("visible"), 100);
 
   continueBtn.addEventListener("click", () => {
     overlay.classList.add("hidden");
-    // Trigger hint animations
     document.querySelectorAll(".hint").forEach(el => el.classList.add("animate"));
   });
 
