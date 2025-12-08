@@ -193,6 +193,7 @@ function initLineGraph() {
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
+    .style("pointer-events", "all")
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -260,57 +261,89 @@ function initLineGraph() {
     .attr("stroke-width", 2)
     .attr("d", line);
 
-  // Interaction overlay
-  svgGraph
-    .append("rect")
+  // Ruler Tool
+  const rulerLine = svgGraph.append("line")
+    .attr("class", "ruler-line")
+    .attr("y1", 0).attr("y2", height)
+    .attr("stroke", "rgba(255, 255, 255, 0.5)")
+    .attr("stroke-dasharray", "3,3")
+    .style("opacity", 0).style("pointer-events", "none");
+
+  const rulerText = svgGraph.append("text")
+    .attr("class", "ruler-text")
+    .attr("y", -5).attr("fill", "white").attr("font-size", "12px")
+    .style("opacity", 0).style("pointer-events", "none");
+
+  // Overlay for hover interaction (Ruler/Guess)
+  // Since we removed the brush, we need a simple overlay rect to capture mouse events
+  svgGraph.append("rect")
+    .attr("class", "overlay")
     .attr("width", width)
     .attr("height", height)
-    .attr("fill", "transparent")
-    .attr("cursor", "pointer")
+    .style("fill", "none")
+    .style("pointer-events", "all")
+    .style("cursor", "crosshair")
     .on("click", function (event) {
       if (interactionMode !== "guess-intensity") return;
-
       const [mx] = d3.pointer(event);
-      const guessDate = x.invert(mx);
-
-      // Reveal full line
-      svgGraph
-        .append("path")
-        .datum(floridaMeanData)
-        .attr("class", "line-full")
-        .attr("fill", "none")
-        .attr("stroke", "#2b9c85")
-        .attr("stroke-width", 2)
-        .attr("stroke-dasharray", "5,5")
-        .attr("d", line)
-        .attr("opacity", 0)
-        .transition()
-        .duration(1000)
-        .attr("opacity", 1);
-
-      // Mark guess
-      svgGraph
-        .append("line")
-        .attr("x1", mx)
-        .attr("x2", mx)
-        .attr("y1", 0)
-        .attr("y2", height)
-        .attr("stroke", "white")
-        .attr("stroke-dasharray", "2,2");
-
-      // Show reality text below graph
-      d3.select("#reality-text")
-        .style("display", "block")
-        .style("opacity", 0)
-        .transition()
-        .delay(1000)
-        .duration(500)
-        .style("opacity", 1);
-
-      interactionMode = "none";
+      handleGuess(mx);
+    })
+    .on("mousemove", function (event) {
+      if (interactionMode !== "guess-intensity") return;
+      const [mx] = d3.pointer(event);
+      updateRuler(mx);
+    })
+    .on("mouseleave", function () {
+      hideRuler();
     });
+
+  function updateRuler(mx) {
+    rulerLine.attr("x1", mx).attr("x2", mx).style("opacity", 1);
+    const dateVal = x.invert(mx);
+    rulerText.attr("x", Math.min(width - 100, Math.max(0, mx)))
+      .text(formatDateShort(dateVal)).style("opacity", 1);
+  }
+
+  function hideRuler() {
+    rulerLine.style("opacity", 0);
+    rulerText.style("opacity", 0);
+    interactionMode = "none";
+  }
+
+  function handleGuess(mx) {
+    const guessDate = x.invert(mx);
+    const actualEvent = floridaMeanData.find(d => d.value > 50);
+    let feedbackMsg = "";
+
+    if (actualEvent) {
+      const diffHours = (guessDate - actualEvent.date) / (1000 * 60 * 60);
+      const absDiff = Math.abs(diffHours);
+      if (absDiff < 6) feedbackMsg = `Nice! You were within ${Math.round(absDiff)} hours!`;
+      else if (absDiff < 12) feedbackMsg = `Close! You missed by about ${Math.round(absDiff)} hours.`;
+      else feedbackMsg = `You missed by ${Math.round(absDiff)} hours - even with spatial maps, prediction is harder than it seems!`;
+    } else {
+      feedbackMsg = "Interesting guess! Let's see what actually happened.";
+    }
+
+    svgGraph.append("path").datum(floridaMeanData).attr("class", "line-full")
+      .attr("fill", "none").attr("stroke", "#2b9c85").attr("stroke-width", 2)
+      .attr("stroke-dasharray", "5,5").attr("d", line)
+      .attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+
+    svgGraph.append("line").attr("x1", mx).attr("x2", mx)
+      .attr("y1", 0).attr("y2", height).attr("stroke", "white").attr("stroke-dasharray", "2,2");
+
+    hideRuler();
+    d3.select("#reality-text").html(feedbackMsg).style("display", "block")
+      .style("opacity", 0).transition().delay(1000).duration(500).style("opacity", 1);
+
+    interactionMode = "none";
+  }
 }
 
+function formatDateShort(date) {
+  return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', hour12: true });
+}
 // --- Interaction 2: Track ---
 
 let lastTrackResult = null;
@@ -703,6 +736,191 @@ function getMaxRainfallCoord(frame) {
   return [frame.lons[maxIdx], frame.lats[maxIdx]];
 }
 
+// --- Resource Allocation Game ---
+
+const floridaRegions = [
+  { id: "panhandle", name: "Panhandle", lat: 30.5, lon: -85.5, rainImpact: 30, windImpact: 40, pop: 1 },
+  { id: "bigbend", name: "Big Bend", lat: 29.8, lon: -83.5, rainImpact: 50, windImpact: 90, pop: 1 },
+  { id: "tampa", name: "Tampa Bay", lat: 27.9, lon: -82.5, rainImpact: 90, windImpact: 70, pop: 3 },
+  { id: "orlando", name: "Central / Orlando", lat: 28.5, lon: -81.4, rainImpact: 60, windImpact: 50, pop: 3 },
+  { id: "southwest", name: "Southwest", lat: 26.6, lon: -81.9, rainImpact: 40, windImpact: 60, pop: 2 },
+  { id: "eastcoast", name: "East Coast", lat: 28.0, lon: -80.6, rainImpact: 40, windImpact: 40, pop: 2 },
+  { id: "south", name: "South Florida", lat: 25.8, lon: -80.2, rainImpact: 20, windImpact: 30, pop: 3 }
+];
+
+let allocatedRain = {};
+let allocatedWind = {};
+const MAX_RAIN_UNITS = 100;
+const MAX_WIND_UNITS = 100;
+
+function initResourceGame() {
+  const container = d3.select("#game-controls-container");
+  container.html("");
+
+  floridaRegions.forEach(region => {
+    allocatedRain[region.id] = 0;
+    allocatedWind[region.id] = 0;
+
+    const div = container.append("div").attr("class", "region-control");
+    div.append("h4").text(region.name);
+
+    // Rain Slider
+    const rainGroup = div.append("div").attr("class", "slider-group rain");
+    rainGroup.append("label").html(`Rain: <span id="rain-val-${region.id}">0</span>`);
+    rainGroup.append("input")
+      .attr("type", "range")
+      .attr("min", 0).attr("max", 50)
+      .attr("value", 0)
+      .on("input", function () {
+        const val = +this.value;
+        const clamped = updateAllocation(region.id, "rain", val);
+        if (clamped !== val) {
+          this.value = clamped;
+        }
+      });
+
+    // Wind Slider
+    const windGroup = div.append("div").attr("class", "slider-group wind");
+    windGroup.append("label").html(`Wind: <span id="wind-val-${region.id}">0</span>`);
+    windGroup.append("input")
+      .attr("type", "range")
+      .attr("min", 0).attr("max", 50)
+      .attr("value", 0)
+      .on("input", function () {
+        const val = +this.value;
+        const clamped = updateAllocation(region.id, "wind", val);
+        if (clamped !== val) {
+          this.value = clamped;
+        }
+      });
+  });
+
+  d3.select("#submit-plan-btn").on("click", submitPlan);
+
+  updateStats();
+  renderRegionsOnGlobe();
+}
+
+function updateAllocation(regionId, type, value) {
+  const store = type === "rain" ? allocatedRain : allocatedWind;
+  const maxTotal = type === "rain" ? MAX_RAIN_UNITS : MAX_WIND_UNITS;
+
+  let otherTotal = 0;
+  Object.keys(store).forEach(k => {
+    if (k !== regionId) otherTotal += store[k];
+  });
+
+  const available = maxTotal - otherTotal;
+  let newValue = value;
+  if (newValue > available) {
+    newValue = available;
+  }
+
+  store[regionId] = newValue;
+  d3.select(`#${type}-val-${regionId}`).text(newValue);
+
+  updateStats();
+  updateGlobeVisuals();
+
+  return newValue; // Return clamped value
+}
+
+function updateStats() {
+  const totalRain = Object.values(allocatedRain).reduce((a, b) => a + b, 0);
+  const totalWind = Object.values(allocatedWind).reduce((a, b) => a + b, 0);
+
+  d3.select("#rain-left").text(MAX_RAIN_UNITS - totalRain);
+  d3.select("#wind-left").text(MAX_WIND_UNITS - totalWind);
+}
+
+function renderRegionsOnGlobe() {
+  // Add regions to SVG
+  // Remove existing first
+  svg.selectAll(".region-marker").remove();
+
+  svg.selectAll(".region-marker")
+    .data(floridaRegions)
+    .enter()
+    .append("circle")
+    .attr("class", "region-marker")
+    .attr("r", 5)
+    .attr("fill", "rgba(255,255,255,0.3)")
+    .attr("stroke", "white")
+    .attr("stroke-width", 1);
+
+  updateGlobeVisuals();
+}
+
+function updateGlobeVisuals() {
+  // Update positions and styles based on allocation
+  svg.selectAll(".region-marker")
+    .attr("cx", d => projection([d.lon, d.lat]) ? projection([d.lon, d.lat])[0] : -100)
+    .attr("cy", d => projection([d.lon, d.lat]) ? projection([d.lon, d.lat])[1] : -100)
+    .attr("fill", d => {
+      const r = allocatedRain[d.id];
+      const w = allocatedWind[d.id];
+      if (r > w) return `rgba(59, 130, 246, ${0.3 + r / 100})`; // Blueish
+      if (w > r) return `rgba(239, 68, 68, ${0.3 + w / 100})`; // Reddish
+      return "rgba(255,255,255,0.3)";
+    })
+    .attr("r", d => {
+      const total = allocatedRain[d.id] + allocatedWind[d.id];
+      return 5 + total / 5;
+    });
+}
+
+function submitPlan() {
+  let score = 0;
+  let maxScore = 0;
+  let feedback = "";
+
+  floridaRegions.forEach(r => {
+    // Simple scoring: 
+    // Ideal allocation proportional to impact?
+    // Or penalty for missing impact?
+
+    // Let's say Score = 100 - weighted_error
+    // Error = |Allocated - Impact_Scaled| ?
+    // Impact is 0-100 scale roughly.
+    // Allocation is 0-50.
+    // Let's normalize impact to 0-50 for comparison.
+
+    const targetRain = r.rainImpact / 2;
+    const targetWind = r.windImpact / 2;
+
+    const rainDiff = Math.abs(allocatedRain[r.id] - targetRain);
+    const windDiff = Math.abs(allocatedWind[r.id] - targetWind);
+
+    // Weight by population
+    const weight = r.pop;
+
+    score += (100 - (rainDiff + windDiff)) * weight;
+    maxScore += 100 * weight;
+
+    // Generate specific feedback for outliers
+    if (r.id === "tampa" && allocatedRain[r.id] < 10) {
+      feedback += `<p><strong>Tampa Bay</strong>: Heavy flooding occurred here. Your rain allocation was dangerously low.</p>`;
+    }
+    if (r.id === "bigbend" && allocatedWind[r.id] > 20) {
+      // feedback += `<p><strong>Big Bend</strong>: Good call on wind protection here.</p>`; 
+      // Actually Big Bend had huge surge, so high wind allocation is good.
+    }
+  });
+
+  const finalScore = Math.round((score / maxScore) * 100);
+
+  d3.select("#final-score").text(`${finalScore}/100`);
+
+  if (feedback === "") {
+    if (finalScore > 80) feedback = "<p>Excellent work! Your resource allocation closely matched the actual impact patterns.</p>";
+    else feedback = "<p>You saved many, but some high-risk areas were under-protected. Review the map to see where Helene hit hardest.</p>";
+  }
+
+  d3.select("#feedback-details").html(feedback);
+  d3.select("#simulation-results").classed("hidden", false);
+}
+
+
 // ---------- Scrollama Scrollytelling ----------
 function initScrollytelling(numFrames) {
   const scroller = scrollama();
@@ -732,9 +950,50 @@ function initScrollytelling(numFrames) {
         svg.style("pointer-events", "auto");
       }
 
+      // Hide mini heatmap if not in Interaction 1
+      if (step !== "scene3" && step !== "scene4" && step !== "scene5") {
+        d3.select("#mini-heatmap-container").classed("hidden", true);
+      }
+
       if (step === "scene3" || step === "scene4" || step === "scene5") {
-        // Init Line Graph if needed (it's now inline, so always visible in DOM)
         if (floridaMeanData.length === 0) initLineGraph();
+      }
+
+      // Game Logic
+      if (step === "scene10" || step === "scene11" || step === "scene12") {
+        // d3.select("#resource-game-ui").classed("hidden", false); // Removed
+        if (Object.keys(allocatedRain).length === 0) initResourceGame();
+
+        // Sync Visualization: Set time to just before landfall (e.g., Frame ~30-35?)
+        // Helene landfall was Sept 26 late.
+        // rrqpeData starts Sept 21.
+        // Let's find a frame around Sept 26 18:00 UTC.
+        const targetDate = new Date("2024-09-26T18:00:00Z");
+        const targetIdx = rrqpeData.findIndex(d => new Date(d.datetime) >= targetDate);
+        if (targetIdx !== -1 && currFrameidx !== targetIdx) {
+          onFrameChange(targetIdx);
+        }
+
+        // Zoom to Florida
+        const targetScale = width * 3;
+        const targetRotate = [82, -28];
+
+        d3.transition()
+          .duration(800)
+          .tween("rotate", () => {
+            const r = d3.interpolate(projection.rotate(), targetRotate);
+            const s = d3.interpolate(projection.scale(), targetScale);
+            return (t) => {
+              projection.rotate(r(t));
+              projection.scale(s(t));
+              currentScale = s(t);
+              redraw();
+              updateGlobeVisuals();
+            };
+          });
+      } else {
+        // d3.select("#resource-game-ui").classed("hidden", true); // Removed
+        svg.selectAll(".region-marker").remove();
       }
 
       if (
@@ -743,7 +1002,6 @@ function initScrollytelling(numFrames) {
         step !== "scene8" &&
         step !== "scene9"
       ) {
-        // Clear previous interaction results
         clearInteractionResults();
         lastTrackResult = null;
         currTrackPrediction = null;
@@ -759,7 +1017,6 @@ function initScrollytelling(numFrames) {
       }
 
       if (step === "scene7") {
-        // init Track Interaction
         interactionMode = "guess-track";
         canPredict = true;
         if (scrollDirection > 0) {
@@ -788,12 +1045,9 @@ function initScrollytelling(numFrames) {
         d3.select("#globe-container").classed("cursor-crosshair", true);
       }
 
-      // Camera Movements
+      // Camera Movements (Existing)
       if (step === "scene2" || step === "scene6") {
-        // button toggle
         d3.select("#controls-container").classed("hidden", false);
-
-        // Zoom to Helene
         const targetScale = width * 1.2;
         const targetRotate = [80, -30.5];
         const targetTranslate = [width / 2, height / 2 - height * 0.15];
@@ -813,16 +1067,14 @@ function initScrollytelling(numFrames) {
             };
           });
       } else if (step === "scene1" || step === "spacer1") {
-        // Reset
         const targetScale = width * 0.2;
         const targetRotate = [80, 0];
         const targetTranslate = [width / 2, height / 2];
 
-        // button toggle
         d3.select("#controls-container").classed("hidden", true);
-        const toggleBtn = document.getElementById("feature-toggle");
+        const toggleInput = document.getElementById("feature-toggle");
         currentFeature = "rainfall";
-        toggleBtn.textContent = "Switch to Wind Speed";
+        if (toggleInput) toggleInput.checked = false;
         initColorScale(
           "Rainfall Rate (mm/hr)",
           rrqpeMin,
@@ -850,7 +1102,7 @@ function initScrollytelling(numFrames) {
       response.element.classList.remove("is-active");
     });
 
-  // Continuous scroll listener for the entire page height
+  // Continuous scroll listener (Existing)
   const onScroll = () => {
     const doc = document.documentElement;
     const scrollTop = doc.scrollTop || document.body.scrollTop || 0;
@@ -861,21 +1113,17 @@ function initScrollytelling(numFrames) {
 
     if (scrollHeight <= 0) return;
 
-    // Determine the document-space ranges for the early intro steps
     const scene1El = document.querySelector('.step[data-step="scene1"]');
     const spacerEl = document.querySelector('.step[data-step="spacer1"]');
 
-    // fall back to full-range mapping if elements are missing
     if (!scene1El || !spacerEl || !n6hrFrames || n6hrFrames <= 1) {
       const t = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
-      const mapped = Math.floor(t * (numFrames - 1));
+      const mapped = Math.floor(t * (rrqpeData.length - 1));
       if (mapped !== currFrameidx) onFrameChange(mapped);
       return;
     }
 
-    // Use a centering offset similar to the scroller offset (0.5)
     const centerOffset = window.innerHeight * 0.5;
-
     const rangeStart = Math.max(0, scene1El.offsetTop - centerOffset);
     const rangeEnd = Math.min(
       scrollHeight,
@@ -887,13 +1135,11 @@ function initScrollytelling(numFrames) {
     if (scrollTop < rangeStart) {
       mapped = 0;
     } else if (scrollTop >= rangeStart && scrollTop <= rangeEnd) {
-      // Map the progress within the scene1+spacer range to the 6hr frames
       const t = (scrollTop - rangeStart) / Math.max(1, rangeEnd - rangeStart);
       const idx = Math.floor(t * (n6hrFrames - 1));
       mapped = Math.min(Math.max(idx, 0), n6hrFrames - 1);
     } else {
-      // Map the remaining scroll to the rest of the frames
-      const remainingFrames = Math.max(1, numFrames - n6hrFrames);
+      const remainingFrames = Math.max(1, rrqpeData.length - n6hrFrames);
       const t = (scrollTop - rangeEnd) / Math.max(1, scrollHeight - rangeEnd);
       const idx = Math.floor(t * (remainingFrames - 1));
       mapped = n6hrFrames + Math.min(Math.max(idx, 0), remainingFrames - 1);
@@ -906,8 +1152,6 @@ function initScrollytelling(numFrames) {
 
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
-
-  // Initial call
   onScroll();
 }
 
@@ -1052,15 +1296,13 @@ async function init() {
   );
 
   // Toggle Logic
-  const toggleBtn = document.getElementById("feature-toggle");
-  toggleBtn.addEventListener("click", () => {
-    if (currentFeature === "rainfall") {
+  const toggleInput = document.getElementById("feature-toggle");
+  toggleInput.addEventListener("change", (e) => {
+    if (e.target.checked) {
       currentFeature = "wind";
-      toggleBtn.textContent = "Switch to Rainfall";
-      initColorScale("Wind Speed (m/s)", dmwMin, dmwMax, d3.interpolateInferno);
+      initColorScale("Wind Speed (m/s)", dmwMin, dmwMax, d3.interpolatePlasma);
     } else {
       currentFeature = "rainfall";
-      toggleBtn.textContent = "Switch to Wind Speed";
       initColorScale(
         "Rainfall Rate (mm/hr)",
         rrqpeMin,
@@ -1074,8 +1316,17 @@ async function init() {
   // map whole-page scroll position 0..1 to slider frames 0..N-1
   initScrollytelling(rrqpeData.length);
 
-  // Hide loading overlay immediately
-  overlay.classList.add("hidden");
+  // Show Continue button when ready
+  const continueBtn = document.getElementById("continue-btn");
+  continueBtn.classList.remove("hidden");
+  // Force reflow/repaint if needed, but adding a class for fade-in is better
+  setTimeout(() => continueBtn.classList.add("visible"), 100);
+
+  continueBtn.addEventListener("click", () => {
+    overlay.classList.add("hidden");
+    // Trigger hint animations
+    document.querySelectorAll(".hint").forEach(el => el.classList.add("animate"));
+  });
 
   redraw();
   animate();

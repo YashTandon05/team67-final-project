@@ -21,7 +21,13 @@
         </p>
       </header>
 
-      <div id="loading-overlay">Loading data…</div>
+      <div id="loading-overlay">
+        <div class="loading-content">
+          <h1>Small errors, big consequences - hurricane data matters!</h1>
+          <p>There were 6 named hurricanes in just one month of 2024. How does satellite weather data help build infrastructure for preparedness?</p>
+          <button id="continue-btn" class="hidden">Continue</button>
+        </div>
+      </div>
       <div id="datetime-display">
         <div id="date"></div>
         <div id="time"></div>
@@ -32,13 +38,32 @@
 
       <section id="viz-wrapper">
         <div id="controls-container">
-          <button id="feature-toggle" class="toggle-btn">
-            Switch to Wind Speed
-          </button>
+          <label class="switch-container">
+            <span class="switch-label">Wind Speed</span>
+            <label class="switch">
+              <input type="checkbox" id="feature-toggle">
+              <span class="slider round"></span>
+            </label>
+          </label>
+        </div>
+        
+        <div id="interaction-hints">
+            <div class="hint">Scroll to zoom!</div>
+            <div class="hint">Click and drag to rotate!</div>
         </div>
         <div id="color-legend"></div>
         <div id="globe-container">
           <!-- SVG will be injected here by script.js -->
+        </div>
+
+        <div id="mini-heatmap-container" class="hidden">
+          <h3>Rate of Change</h3>
+          <canvas id="mini-heatmap-canvas"></canvas>
+          <div class="legend">
+            <span>Weakening</span>
+            <div class="gradient-bar"></div>
+            <span>Intensifying</span>
+          </div>
         </div>
 
         <div id="scrolly">
@@ -50,7 +75,7 @@
                 <p>
                   2024 was a year defined by hurricanes — and their
                   unpredictability. But what makes predicting a hurricane so
-                  challenging? Start scrolling to explore.
+                  challenging? <br><br><strong>Start scrolling to explore.</strong>
                 </p>
               </div>
             </div>
@@ -82,6 +107,7 @@
                 <ul>
                   <li id="ch-button"><a href="#chapter1">1. Intensity</a></li>
                   <li id="ch-button"><a href="#chapter2">2. Track</a></li>
+                  <li id="ch-button"><a href="#resource-game-ui">3. Resource Allocation</a></li>
                 </ul>
                 <p>You’ll make predictions — just like real forecasters.</p>
               </div>
@@ -92,10 +118,11 @@
               <div class="text-content">
                 <h2>Challenge 1: Intensity</h2>
                 <p>
-                  A hurricane’s rainfall rate — its intensity — is one of the
-                  hardest things to forecast.
+                  Helene was initially expected to be a manageable storm. But in the warm waters of the Gulf, something changed.
                 </p>
-                <p>Below is Helene’s early rainfall trend over Florida.</p>
+                <p>
+                  A hurricane’s rainfall rate — its intensity — is one of the hardest things to forecast. Below is Helene’s early rainfall trend over Florida.
+                </p>
               </div>
             </div>
 
@@ -114,7 +141,7 @@
                   >
                 </p>
                 <div id="line-graph-viz"></div>
-                <p>Click on the timeline to make your guess.</p>
+                <p>Use the ruler to make a data-informed prediction. Click on the timeline to lock in your guess.</p>
                 <p
                   id="reality-text"
                   style="
@@ -124,8 +151,7 @@
                     color: #2b9c85;
                   "
                 >
-                  Models had difficulty predicting this spike — intensity
-                  forecasting is full of uncertainty.
+                  <!-- Content injected by JS -->
                 </p>
               </div>
             </div>
@@ -135,8 +161,13 @@
               <div class="text-content">
                 <h2>The Reality</h2>
                 <p>
-                  Models had difficulty predicting this jump — intensity
-                  forecasting is full of uncertainty.
+                  That sudden jump is <strong>rapid intensification</strong>: when a storm grows stronger much faster than expected.
+                </p>
+                <p>
+                  For coastal communities, those hours can mean the difference between a routine storm and a disaster. 
+                </p>
+                <p>
+                  <strong>BUT</strong> without continuous, high-resolution satellite data, we don’t see this jump clearly — or we see it too late.
                 </p>
               </div>
             </div>
@@ -201,24 +232,105 @@
               </div>
             </div>
 
-            <!-- Scene 13: Wrap-Up -->
-            <div class="step" data-step="scene13">
+            <!-- Scene 10: Game Intro -->
+            <div class="step" data-step="scene10">
               <div class="text-content">
-                <h2>Summary</h2>
+                <h2>Emergency Resource Allocation</h2>
                 <p>
-                  We explored two factors of hurricane forcasting:
+                  Forecasts matter only when translated into decisions. You are now the emergency manager.
                 </p>
-                <ul>
-                  <li><strong>Intensity</strong>: When will rainfall spike?</li>
-                  <li><strong>Track</strong>: Where will the storm travel?</li>
-                </ul>
                 <p>
-                  We hope allowing you to try forecasting yourself surprised you with the intensity and path of Hurricane Helene, and gave you a better appreciation for the challenges meteorologists face every day.
+                  Helene is approaching. You have limited resources to protect Florida's regions.
                 </p>
               </div>
             </div>
 
-            <div class="step" data-step="spacer">
+            <!-- Scene 11: Allocation -->
+            <div class="step" data-step="scene11">
+              <div class="text-content">
+                <h2>Make Your Decisions</h2>
+                <p>
+                  Allocate <strong>Rainfall Mitigation Units</strong> and <strong>Wind Impact Units</strong>.
+                </p>
+                <p>
+                  Use the sidebar to distribute your resources. Watch the globe for feedback.
+                </p>
+                <!-- Game Controls Container -->
+                <div id="game-controls-container"></div>
+                
+                <div class="stats-panel">
+                   <p>Rain Units Left: <span id="rain-left">100</span></p>
+                   <p>Wind Units Left: <span id="wind-left">100</span></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scene 12: Simulation -->
+            <div class="step" data-step="scene12">
+              <div class="text-content">
+                <h2>The Storm Arrives</h2>
+                <p>
+                  Helene makes landfall. How did your preparation hold up?
+                </p>
+                <button id="submit-plan-btn">Run Simulation</button>
+                
+                <!-- Game Results Container -->
+                <div id="simulation-results" class="hidden">
+                    <h3>Preparedness Score: <span id="final-score">0/100</span></h3>
+                    <div id="feedback-details"></div>
+                    <!-- Close button not needed if inline -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Scene 13: Reflection -->
+            <div class="step" data-step="scene13">
+              <div class="text-content">
+                <h2>Reflection</h2>
+                <p>
+                  Even with data, uncertainty persists. Limited resources and time pressure make every decision critical.
+                </p>
+                <p>
+                  This exercise shows why <strong>data infrastructure matters</strong>: more sensors mean more time, better decisions, and fewer casualties.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 14: Conclusion -->
+            <div class="step" data-step="scene14">
+              <div class="text-content">
+                <h2>Takeaway</h2>
+                <p>
+                  <strong>If there’s one thing to remember…</strong>
+                </p>
+                <p>
+                  Preparedness relies as much on data infrastructure as on physical infrastructure.
+                </p>
+                <p>
+                  Investing in weather sensors, satellites, and data pipelines creates time to act — and saves lives.
+                </p>
+              </div>
+            </div>
+
+            <!-- Scene 15: Summary (Old Scene 13) -->
+            <div class="step" data-step="scene15">
+              <div class="text-content">
+                <h2>Summary</h2>
+                <p>
+                  We explored three key aspects of hurricane response:
+                </p>
+                <ul>
+                  <li><strong>Intensity</strong>: Predicting rainfall spikes.</li>
+                  <li><strong>Track</strong>: Forecasting the storm's path.</li>
+                  <li><strong>Decisions</strong>: Allocating resources under uncertainty.</li>
+                </ul>
+                <p>
+                  We hope this experience gave you a better appreciation for the challenges meteorologists and emergency managers face every day.
+                </p>
+              </div>
+            </div>
+
+            <div class="step" data-step="scene16">
               <div class="text-content">
                 <h2>How does climate data help us?</h2>
                 <p>
@@ -230,7 +342,7 @@
               </div>
             </div>
 
-            <div class="step" data-step="spacer">
+            <div class="step" data-step="scene17">
               <div class="text-content">
                 <h2>What kind of infrastructure exists to keep people safe?</h2>
                 <p>
@@ -256,6 +368,38 @@
             </div>
 
           </article>
+        </div>
+
+        <!-- Game UI Containers -->
+        <div id="resource-game-ui" class="hidden">
+          <div id="allocation-sidebar">
+            <h3>Resource Allocation</h3>
+            
+            <div class="resource-stats">
+              <div class="stat-box rain">
+                <span class="label">Rain Units Left</span>
+                <span id="rain-left" class="value">100</span>
+              </div>
+              <div class="stat-box wind">
+                <span class="label">Wind Units Left</span>
+                <span id="wind-left" class="value">100</span>
+              </div>
+            </div>
+
+            <div id="regions-container">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+
+          <div id="simulation-results" class="hidden">
+            <h3>Simulation Results</h3>
+            <div id="score-display">
+              <span class="score-label">Preparedness Score</span>
+              <span id="final-score">0/100</span>
+            </div>
+            <div id="feedback-details"></div>
+            <button id="close-results">Close</button>
+          </div>
         </div>
       </section>
     </main>
