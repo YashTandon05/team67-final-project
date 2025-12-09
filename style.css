@@ -500,6 +500,16 @@ article {
   opacity: 0.9;
 }
 
+.text-content p a {
+  text-decoration: none;
+  color: #2b9c85;
+  cursor: pointer;
+}
+.text-content p a:hover {
+  color: #1e7463;
+  text-decoration: underline;
+}
+
 /* Globe Styles */
 .land {
   fill: #2b9c85;

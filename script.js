@@ -352,7 +352,7 @@ function initLineGraph() {
       .style("display", "block")
       .style("opacity", 0)
       .transition()
-      .delay(1000)
+      .delay(200)
       .duration(500)
       .style("opacity", 1);
 
@@ -581,7 +581,7 @@ function displayTrackScore() {
       userScore
     )} coord units</strong> while experts received a score of <strong>${Math.round(
       expertScore
-    )}</strong>! Try again using wind speed to gain a sense of using multiple variables in predictions. </p>`;
+    )}</strong>! <a href="#chapter2">Try again</a> using wind speed to gain a sense of using multiple variables in predictions. </p>`;
   } else {
     trackFeedback += `<p>You may have a future in forcasting. Experts received a score of <strong>${Math.round(
       expertScore
