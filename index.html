@@ -52,6 +52,7 @@
             <div class="hint">Click and drag to rotate!</div>
         </div>
         <div id="color-legend"></div>
+        <div id="track-color-legend" class="hidden"></div> 
         <div id="globe-container">
           <!-- SVG will be injected here by script.js -->
         </div>
@@ -172,7 +173,6 @@
               </div>
             </div>
 
-            <!-- Scene 6: Return to Globe -->
             <div class="step" data-step="scene6" id="chapter2">
               <div class="text-content">
                 <h2>Challenge 2: Track</h2>
@@ -187,7 +187,7 @@
                   direction by toggling the button in the top right. Does that
                   help your prediction?
                 </p>
-                <p id="prediction-feedback"
+                <p class="prediction-feedback"
                   style="
                     display: none;
                     margin-top: 15px;
@@ -207,6 +207,16 @@
                 <p>
                   The true path is shown in red and your predictions are shown in pink!
                 </p>
+                <p class="prediction-feedback"
+                  style="
+                    display: none;
+                    margin-top: 15px;
+                    font-style: italic;
+                    color: #2b9c85;
+                  "
+                  >
+                  Prediction placed! Keep scrolling to see how you did.
+                </p>
               </div>
             </div>
 
@@ -214,6 +224,16 @@
             <div class="step" data-step="scene8" data-behavior="guess-track">
               <div class="text-content">
                 <h2>Your final shot!</h2>
+                <p class="prediction-feedback"
+                  style="
+                    display: none;
+                    margin-top: 15px;
+                    font-style: italic;
+                    color: #2b9c85;
+                  "
+                  >
+                  Prediction placed! Keep scrolling to see how you did.
+                </p>
               </div>
             </div>
 
@@ -223,12 +243,10 @@
                 <h2>How did you do?</h2>
                 <p>
                   How did your guess compare to the official track over 36
-                  hours? Do you have a future in hurricane forecasting?
+                  hours? We have also displayed the predicted path by experts in white, starting just <strong>3hrs</strong> before you starting forecasting yourself. 
                 </p>
-                <p>
-                  Track forecasting is difficult because small shifts in the
-                  storm’s center can lead to large changes in impact areas.
-                </p>
+                <div id="track-feedback"></div>
+                <small>Expert prediction data provided by the <a href="https://rammb-data.cira.colostate.edu/tc_realtime/storm.asp?storm_identifier=al092024&"target="_blank">Regional and Mesoscale Meteorology Branch.</a></small>
               </div>
             </div>
 
@@ -301,7 +319,7 @@
               <div class="text-content">
                 <h2>Takeaway</h2>
                 <p>
-                  <strong>If there’s one thing to remember…</strong>
+                  Now that Helene has passed, <strong>there’s one thing to remember…</strong>
                 </p>
                 <p>
                   Preparedness relies as much on data infrastructure as on physical infrastructure.
@@ -365,7 +383,7 @@
                   </ul>
                 </p>
               </div>
-            </div>
+            </div>   
 
           </article>
         </div>

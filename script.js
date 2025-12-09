@@ -3,10 +3,13 @@ import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+e
 import { loadDailyRRQPE } from "./rrqpe_daily.js";
 import { preload6hrRRQPE } from "./rrqpe6hr.js";
 import { loadDMWData } from "./dmw_data.js";
+import { loadHeleneTrack, loadExpertPrediction } from "./track_history.js";
 
 let rrqpeData = null;
 let dmwData = null;
 let rrqpeHelene = null;
+let officalTrackHelene = null;
+let trackPrediction = null;
 let currentFeature = "rainfall"; // 'rainfall' or 'wind'
 let currDateTime = null;
 let currFrameidx = 0;
@@ -242,19 +245,27 @@ function initLineGraph() {
     .attr("stroke-width", 2)
     .attr("d", line);
 
-  const rulerLine = svgGraph.append("line")
+  const rulerLine = svgGraph
+    .append("line")
     .attr("class", "ruler-line")
-    .attr("y1", 0).attr("y2", height)
+    .attr("y1", 0)
+    .attr("y2", height)
     .attr("stroke", "rgba(255, 255, 255, 0.5)")
     .attr("stroke-dasharray", "3,3")
-    .style("opacity", 0).style("pointer-events", "none");
+    .style("opacity", 0)
+    .style("pointer-events", "none");
 
-  const rulerText = svgGraph.append("text")
+  const rulerText = svgGraph
+    .append("text")
     .attr("class", "ruler-text")
-    .attr("y", -5).attr("fill", "white").attr("font-size", "12px")
-    .style("opacity", 0).style("pointer-events", "none");
+    .attr("y", -5)
+    .attr("fill", "white")
+    .attr("font-size", "12px")
+    .style("opacity", 0)
+    .style("pointer-events", "none");
 
-  svgGraph.append("rect")
+  svgGraph
+    .append("rect")
     .attr("class", "overlay")
     .attr("width", width)
     .attr("height", height)
@@ -278,8 +289,10 @@ function initLineGraph() {
   function updateRuler(mx) {
     rulerLine.attr("x1", mx).attr("x2", mx).style("opacity", 1);
     const dateVal = x.invert(mx);
-    rulerText.attr("x", Math.min(width - 100, Math.max(0, mx)))
-      .text(formatDateShort(dateVal)).style("opacity", 1);
+    rulerText
+      .attr("x", Math.min(width - 100, Math.max(0, mx)))
+      .text(formatDateShort(dateVal))
+      .style("opacity", 1);
   }
 
   function hideRuler() {
@@ -290,55 +303,113 @@ function initLineGraph() {
 
   function handleGuess(mx) {
     const guessDate = x.invert(mx);
-    const actualEvent = floridaMeanData.find(d => d.value > 50);
+    const actualEvent = floridaMeanData.find((d) => d.value > 50);
     let feedbackMsg = "";
 
     if (actualEvent) {
       const diffHours = (guessDate - actualEvent.date) / (1000 * 60 * 60);
       const absDiff = Math.abs(diffHours);
-      if (absDiff < 6) feedbackMsg = `Nice! You were within ${Math.round(absDiff)} hours!`;
-      else if (absDiff < 12) feedbackMsg = `Close! You missed by about ${Math.round(absDiff)} hours.`;
-      else feedbackMsg = `You missed by ${Math.round(absDiff)} hours - even with spatial maps, prediction is harder than it seems!`;
+      if (absDiff < 6)
+        feedbackMsg = `Nice! You were within ${Math.round(absDiff)} hours!`;
+      else if (absDiff < 12)
+        feedbackMsg = `Close! You missed by about ${Math.round(
+          absDiff
+        )} hours.`;
+      else
+        feedbackMsg = `You missed by ${Math.round(
+          absDiff
+        )} hours - even with spatial maps, prediction is harder than it seems!`;
     } else {
       feedbackMsg = "Interesting guess! Let's see what actually happened.";
     }
 
-    svgGraph.append("path").datum(floridaMeanData).attr("class", "line-full")
-      .attr("fill", "none").attr("stroke", "#2b9c85").attr("stroke-width", 2)
-      .attr("stroke-dasharray", "5,5").attr("d", line)
-      .attr("opacity", 0).transition().duration(1000).attr("opacity", 1);
+    svgGraph
+      .append("path")
+      .datum(floridaMeanData)
+      .attr("class", "line-full")
+      .attr("fill", "none")
+      .attr("stroke", "#2b9c85")
+      .attr("stroke-width", 2)
+      .attr("stroke-dasharray", "5,5")
+      .attr("d", line)
+      .attr("opacity", 0)
+      .transition()
+      .duration(1000)
+      .attr("opacity", 1);
 
-    svgGraph.append("line").attr("x1", mx).attr("x2", mx)
-      .attr("y1", 0).attr("y2", height).attr("stroke", "white").attr("stroke-dasharray", "2,2");
+    svgGraph
+      .append("line")
+      .attr("x1", mx)
+      .attr("x2", mx)
+      .attr("y1", 0)
+      .attr("y2", height)
+      .attr("stroke", "white")
+      .attr("stroke-dasharray", "2,2");
 
     hideRuler();
-    d3.select("#reality-text").html(feedbackMsg).style("display", "block")
-      .style("opacity", 0).transition().delay(1000).duration(500).style("opacity", 1);
+    d3.select("#reality-text")
+      .html(feedbackMsg)
+      .style("display", "block")
+      .style("opacity", 0)
+      .transition()
+      .delay(1000)
+      .duration(500)
+      .style("opacity", 1);
 
     interactionMode = "none";
   }
 }
 
 function formatDateShort(date) {
-  return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', hour12: true });
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    hour12: true,
+  });
 }
+
 // --- Interaction 2: Track ---
 let lastTrackResult = null;
 let firstTrackPoint = null;
 let currTrackPrediction = null;
 let prevTrackPrediction = null;
 let canPredict = false;
+let trueTrackPts = [];
+let expertPts = [];
+let predictionPts = [];
+
+const expertColor = "rgba(255,255,255, 0.7)";
+const trueColor = "rgba(255, 0, 0, 0.7)";
+const predictionColor = "rgba(253, 0, 219, 0.7)";
+function getClosestTrackPoint(curr) {
+  let closestPoint = null;
+  let minDiff = Infinity;
+  for (const pt of officalTrackHelene) {
+    const diff = Math.abs(new Date(pt.datetime) - curr);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closestPoint = pt;
+    }
+  }
+  return [closestPoint.lon, closestPoint.lat]; // reversed
+}
+
 function initTrackInteraction() {
-  const currFrame = rrqpeData[currFrameidx];
-  const centerCoord = getMaxRainfallCoord(currFrame);
+  const closestOfficialTrackPoint = getClosestTrackPoint(currDateTime);
+  const pt = closestOfficialTrackPoint;
   svg
     .append("circle")
     .attr("class", "interaction-result true-center")
-    .attr("cx", projection(centerCoord)[0])
-    .attr("cy", projection(centerCoord)[1])
+    .attr("cx", projection(pt)[0])
+    .attr("cy", projection(pt)[1])
     .attr("r", 8)
-    .attr("fill", "rgba(255, 0, 0, 0.7)")
-    .attr("z", 999);
+    .attr("fill", trueColor)
+    .attr("z", 999)
+    .attr("opacity", 0)
+    .transition()
+    .duration(500)
+    .attr("opacity", 1);
 
   if (lastTrackResult) {
     svg
@@ -346,15 +417,62 @@ function initTrackInteraction() {
       .attr("class", "interaction-result track-line")
       .attr("x1", projection(lastTrackResult)[0])
       .attr("y1", projection(lastTrackResult)[1])
-      .attr("x2", projection(centerCoord)[0])
-      .attr("y2", projection(centerCoord)[1])
-      .attr("stroke", "rgba(255, 0, 0, 0.7)")
+      .attr("x2", projection(pt)[0])
+      .attr("y2", projection(pt)[1])
+      .attr("stroke", trueColor)
       .attr("stroke-width", 2)
       .attr("z", 998);
   } else {
-    firstTrackPoint = centerCoord;
+    firstTrackPoint = pt;
   }
-  lastTrackResult = centerCoord;
+  lastTrackResult = pt;
+  trueTrackPts.push(pt);
+}
+
+function showExpertPrediction() {
+  if (!trackPrediction) return;
+  let firstPt = null;
+  let lastExpertPrediction = null;
+  let n = 0;
+
+  for (const pt of trackPrediction) {
+    if (n >= 4) continue;
+
+    const coord = [pt.lon, pt.lat];
+
+    svg
+      .append("circle")
+      .attr("class", "interaction-result expert-prediction")
+      .attr("cx", projection(coord)[0])
+      .attr("cy", projection(coord)[1])
+      .attr("r", 8)
+      .attr("fill", expertColor)
+      .attr("z", 999)
+      .attr("opacity", 0)
+      .transition()
+      .duration(500)
+      .attr("opacity", 1);
+
+    if (firstPt) {
+      svg
+        .append("line")
+        .attr("class", "interaction-result expert-line")
+        .attr("x1", projection(lastExpertPrediction)[0])
+        .attr("y1", projection(lastExpertPrediction)[1])
+        .attr("x2", projection(coord)[0])
+        .attr("y2", projection(coord)[1])
+        .attr("stroke", expertColor)
+        .attr("stroke-width", 2)
+        .attr("z", 998)
+        .attr("opacity", 0)
+        .transition()
+        .duration(500)
+        .attr("opacity", 1);
+    } else firstPt = pt;
+    lastExpertPrediction = coord;
+    expertPts.push(pt);
+    n = n + 1;
+  }
 }
 
 function drawTrackPrediction() {
@@ -372,8 +490,12 @@ function drawTrackPrediction() {
       projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
     )
     .attr("r", 8)
-    .attr("fill", "rgba(255, 0, 234, 0.7)")
-    .attr("z", 999);
+    .attr("fill", predictionColor)
+    .attr("z", 999)
+    .attr("opacity", 0)
+    .transition()
+    .duration(500)
+    .attr("opacity", 1);
   if (prevTrackPrediction) {
     svg
       .append("line")
@@ -394,7 +516,7 @@ function drawTrackPrediction() {
         "y2",
         projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
       )
-      .attr("stroke", "rgba(255, 0, 234, 0.7)")
+      .attr("stroke", predictionColor)
       .attr("stroke-width", 2)
       .attr("z", 998);
   } else {
@@ -411,11 +533,112 @@ function drawTrackPrediction() {
         "y2",
         projection([currTrackPrediction.lon, currTrackPrediction.lat])[1]
       )
-      .attr("stroke", "rgba(255, 0, 234, 0.7)")
+      .attr("stroke", predictionColor)
       .attr("stroke-width", 2)
       .attr("z", 998);
   }
   prevTrackPrediction = currTrackPrediction;
+  predictionPts.push(currTrackPrediction);
+}
+
+function displayTrackScore() {
+  if (
+    expertPts.length === 0 ||
+    predictionPts.length === 0 ||
+    trueTrackPts.length === 0
+  )
+    return;
+
+  let expertScore = 0;
+  let userScore = 0;
+  let i = 0;
+
+  while (i < predictionPts.length) {
+    let t = trueTrackPts[i];
+    let tLon = Math.round(t[1], 1);
+    let tLat = Math.round(t[0], 1);
+    // find  distance between expertPts and trueTrackPts
+    let e = expertPts[i];
+    let expD = Math.sqrt(
+      Math.pow(Number(tLon) - Number(e.lon), 2) +
+        Math.pow(Number(tLat) - Number(e.lat), 2)
+    );
+    let p = predictionPts[i];
+    let userD = Math.sqrt(
+      Math.pow(Number(tLon) - Number(p.lon), 2) +
+        Math.pow(Number(tLat) - Number(p.lat), 2)
+    );
+
+    expertScore += expD;
+    userScore += userD;
+    i++;
+  }
+
+  let trackFeedback = "";
+
+  if (expertScore < userScore) {
+    trackFeedback += `<p>Experts are experts! You received a score of <strong>${Math.round(
+      userScore
+    )} coord units</strong> while experts received a score of <strong>${Math.round(
+      expertScore
+    )}</strong>! Try again using wind speed to gain a sense of using multiple variables in predictions. </p>`;
+  } else {
+    trackFeedback += `<p>You may have a future in forcasting. Experts received a score of <strong>${Math.round(
+      expertScore
+    )} coord units</strong>, and you received a score of just <strong>${Math.round(
+      userScore
+    )}</strong>!</p>`;
+  }
+  d3.select("#track-feedback").html(trackFeedback);
+}
+
+function trackColorLegend() {
+  // draw color legend for tracks (prediction, expert, and true)
+
+  const parent = d3.select("#track-color-legend");
+  parent.classed("hidden", false);
+  const trackLegendSVG = parent
+    .append("svg")
+    .attr("width", 5000)
+    .attr("height", 500)
+    .style("position", "fixed")
+    .style("left", "45vw")
+    .style("top", "10vh");
+
+  const colors = [trueColor, predictionColor, expertColor];
+  const labels = ["True", "User", "Expert"];
+  const boxSize = 20;
+  const gap = 10;
+
+  const legend = trackLegendSVG.append("g");
+
+  // Build the color boxes + text
+  const entry = legend
+    .selectAll("g.legend-entry")
+    .data(colors)
+    .enter()
+    .append("g")
+    .attr("class", "legend-entry")
+    .attr("transform", (d, i) => {
+      const offset = i * (boxSize + 60); // adjust spacing if needed
+      return `translate(${offset}, 0)`;
+    });
+
+  entry
+    .append("rect")
+    .attr("width", boxSize)
+    .attr("height", boxSize)
+    .attr("fill", (d) => d)
+    .attr("stroke", "#333")
+    .attr("stroke-width", 0.6);
+
+  entry
+    .append("text")
+    .attr("x", boxSize + gap)
+    .attr("y", boxSize - 4)
+    .style("font-size", "14px")
+    .style("fill", "white")
+    .text((d, i) => labels[i]);
 }
 
 function clearInteractionResults() {
@@ -643,18 +866,18 @@ function redraw() {
           minDiff = diff;
           closestFrame = frame;
         }
-      }
 
-      if (minDiff < 1.5 * 60 * 60 * 1000) {
-        renderDMWFrame(closestFrame);
-      } else {
-        ctx.clearRect(0, 0, width, height);
+        if (minDiff < 1.5 * 60 * 60 * 1000) {
+          renderDMWFrame(closestFrame);
+        } else {
+          ctx.clearRect(0, 0, width, height);
+        }
       }
     }
-  }
 
-  if (!svg.selectAll(".region-marker").empty()) {
-    updateGlobeVisuals();
+    if (!svg.selectAll(".region-marker").empty()) {
+      updateGlobeVisuals();
+    }
   }
 }
 
@@ -669,19 +892,24 @@ function handleMapClick(event) {
 
   if (interactionMode === "guess-track") {
     currTrackPrediction = { lon, lat };
-    console.log("Track Prediction:", currTrackPrediction);
     drawTrackPrediction();
     interactionMode = "none";
     canPredict = false;
-    const predictionFeedback = d3.select("#prediction-feedback");
+    const predictionFeedback = d3.selectAll(".prediction-feedback");
 
     predictionFeedback
       .style("display", "block")
       .style("opacity", 0)
       .transition()
-      .delay(500)
-      .duration(500)
-      .style("opacity", 1);
+      .duration(100)
+      .style("opacity", 1)
+      .transition()
+      .delay(1000)
+      .duration(100)
+      .style("opacity", 0)
+      .on("end", () => {
+        predictionFeedback.style("display", "none");
+      });
   }
 }
 
@@ -701,13 +929,69 @@ function getMaxRainfallCoord(frame) {
 
 // --- Interaction 3: Resource Allocation Game ---
 const floridaRegions = [
-  { id: "panhandle", name: "Panhandle", lat: 30.5, lon: -85.5, rainImpact: 30, windImpact: 40, pop: 1 },
-  { id: "bigbend", name: "Big Bend", lat: 29.8, lon: -83.5, rainImpact: 50, windImpact: 90, pop: 1 },
-  { id: "tampa", name: "Tampa Bay", lat: 27.9, lon: -82.5, rainImpact: 90, windImpact: 70, pop: 3 },
-  { id: "orlando", name: "Central / Orlando", lat: 28.5, lon: -81.4, rainImpact: 60, windImpact: 50, pop: 3 },
-  { id: "southwest", name: "Southwest", lat: 26.6, lon: -81.9, rainImpact: 40, windImpact: 60, pop: 2 },
-  { id: "eastcoast", name: "East Coast", lat: 28.0, lon: -80.6, rainImpact: 40, windImpact: 40, pop: 2 },
-  { id: "south", name: "South Florida", lat: 25.8, lon: -80.2, rainImpact: 20, windImpact: 30, pop: 3 }
+  {
+    id: "panhandle",
+    name: "Panhandle",
+    lat: 30.5,
+    lon: -85.5,
+    rainImpact: 30,
+    windImpact: 40,
+    pop: 1,
+  },
+  {
+    id: "bigbend",
+    name: "Big Bend",
+    lat: 29.8,
+    lon: -83.5,
+    rainImpact: 50,
+    windImpact: 90,
+    pop: 1,
+  },
+  {
+    id: "tampa",
+    name: "Tampa Bay",
+    lat: 27.9,
+    lon: -82.5,
+    rainImpact: 90,
+    windImpact: 70,
+    pop: 3,
+  },
+  {
+    id: "orlando",
+    name: "Central / Orlando",
+    lat: 28.5,
+    lon: -81.4,
+    rainImpact: 60,
+    windImpact: 50,
+    pop: 3,
+  },
+  {
+    id: "southwest",
+    name: "Southwest",
+    lat: 26.6,
+    lon: -81.9,
+    rainImpact: 40,
+    windImpact: 60,
+    pop: 2,
+  },
+  {
+    id: "eastcoast",
+    name: "East Coast",
+    lat: 28.0,
+    lon: -80.6,
+    rainImpact: 40,
+    windImpact: 40,
+    pop: 2,
+  },
+  {
+    id: "south",
+    name: "South Florida",
+    lat: 25.8,
+    lon: -80.2,
+    rainImpact: 20,
+    windImpact: 30,
+    pop: 3,
+  },
 ];
 
 let allocatedRain = {};
@@ -719,7 +1003,7 @@ function initResourceGame() {
   const container = d3.select("#game-controls-container");
   container.html("");
 
-  floridaRegions.forEach(region => {
+  floridaRegions.forEach((region) => {
     allocatedRain[region.id] = 0;
     allocatedWind[region.id] = 0;
 
@@ -727,10 +1011,14 @@ function initResourceGame() {
     div.append("h4").text(region.name);
 
     const rainGroup = div.append("div").attr("class", "slider-group rain");
-    rainGroup.append("label").html(`Rain: <span id="rain-val-${region.id}">0</span>`);
-    rainGroup.append("input")
+    rainGroup
+      .append("label")
+      .html(`Rain: <span id="rain-val-${region.id}">0</span>`);
+    rainGroup
+      .append("input")
       .attr("type", "range")
-      .attr("min", 0).attr("max", 50)
+      .attr("min", 0)
+      .attr("max", 50)
       .attr("value", 0)
       .on("input", function () {
         const val = +this.value;
@@ -741,10 +1029,14 @@ function initResourceGame() {
       });
 
     const windGroup = div.append("div").attr("class", "slider-group wind");
-    windGroup.append("label").html(`Wind: <span id="wind-val-${region.id}">0</span>`);
-    windGroup.append("input")
+    windGroup
+      .append("label")
+      .html(`Wind: <span id="wind-val-${region.id}">0</span>`);
+    windGroup
+      .append("input")
       .attr("type", "range")
-      .attr("min", 0).attr("max", 50)
+      .attr("min", 0)
+      .attr("max", 50)
       .attr("value", 0)
       .on("input", function () {
         const val = +this.value;
@@ -766,7 +1058,7 @@ function updateAllocation(regionId, type, value) {
   const maxTotal = type === "rain" ? MAX_RAIN_UNITS : MAX_WIND_UNITS;
 
   let otherTotal = 0;
-  Object.keys(store).forEach(k => {
+  Object.keys(store).forEach((k) => {
     if (k !== regionId) otherTotal += store[k];
   });
 
@@ -796,7 +1088,8 @@ function updateStats() {
 function renderRegionsOnGlobe() {
   svg.selectAll(".region-marker").remove();
 
-  svg.selectAll(".region-marker")
+  svg
+    .selectAll(".region-marker")
     .data(floridaRegions)
     .enter()
     .append("circle")
@@ -810,17 +1103,22 @@ function renderRegionsOnGlobe() {
 }
 
 function updateGlobeVisuals() {
-  svg.selectAll(".region-marker")
-    .attr("cx", d => projection([d.lon, d.lat]) ? projection([d.lon, d.lat])[0] : -100)
-    .attr("cy", d => projection([d.lon, d.lat]) ? projection([d.lon, d.lat])[1] : -100)
-    .attr("fill", d => {
+  svg
+    .selectAll(".region-marker")
+    .attr("cx", (d) =>
+      projection([d.lon, d.lat]) ? projection([d.lon, d.lat])[0] : -100
+    )
+    .attr("cy", (d) =>
+      projection([d.lon, d.lat]) ? projection([d.lon, d.lat])[1] : -100
+    )
+    .attr("fill", (d) => {
       const r = allocatedRain[d.id];
       const w = allocatedWind[d.id];
-      if (r > w) return `rgba(59, 130, 246, ${0.3 + r / 100})`;
-      if (w > r) return `rgba(239, 68, 68, ${0.3 + w / 100})`;
+      if (r > w) return `rgba(59, 130, 246, ${0.3 + (r * 2) / 100})`;
+      if (w > r) return `rgba(239, 68, 68, ${0.3 + (w * 2) / 100})`;
       return "rgba(255,255,255,0.3)";
     })
-    .attr("r", d => {
+    .attr("r", (d) => {
       const total = allocatedRain[d.id] + allocatedWind[d.id];
       return 5 + total / 5;
     });
@@ -831,7 +1129,7 @@ function submitPlan() {
   let maxScore = 0;
   let feedback = "";
 
-  floridaRegions.forEach(r => {
+  floridaRegions.forEach((r) => {
     const targetRain = r.rainImpact / 2;
     const targetWind = r.windImpact / 2;
     const rainDiff = Math.abs(allocatedRain[r.id] - targetRain);
@@ -851,14 +1149,18 @@ function submitPlan() {
   d3.select("#final-score").text(`${finalScore}/100`);
 
   if (feedback === "") {
-    if (finalScore > 80) feedback = "<p>Excellent work! Your resource allocation closely matched the actual impact patterns.</p>";
-    else feedback = "<p>You saved many, but some high-risk areas were under-protected. Review the map to see where Helene hit hardest.</p>";
+    if (finalScore > 80)
+      feedback =
+        "<p>Excellent work! Your resource allocation closely matched the actual impact patterns.</p>";
+    else
+      feedback =
+        "<p>You saved many, but some high-risk areas were under-protected. Review the map to see where Helene hit hardest.</p>";
   }
 
   d3.select("#feedback-details").html(feedback);
   d3.select("#simulation-results").classed("hidden", false);
+  d3.select("#simulation-results").classed("hidden", false);
 }
-
 
 // ---------- Scrollama Scrollytelling ----------
 function initScrollytelling(numFrames) {
@@ -878,18 +1180,7 @@ function initScrollytelling(numFrames) {
       d3.select("#globe-container").classed("cursor-crosshair", false);
       interactionMode = "none";
 
-      if (
-        step === "scene1" ||
-        step === "spacer1" ||
-        step === "scene10" ||
-        step === "scene11" ||
-        step === "scene12" ||
-        step === "scene13" ||
-        step === "scene14" ||
-        step === "scene15" ||
-        step === "scene16" ||
-        step === "scene17"
-      ) {
+      if (step === "scene1" || step === "spacer1") {
         isGlobeInteractionEnabled = true;
       } else {
         isGlobeInteractionEnabled = false;
@@ -910,27 +1201,12 @@ function initScrollytelling(numFrames) {
         if (Object.keys(allocatedRain).length === 0) initResourceGame();
         renderRegionsOnGlobe();
         const targetDate = new Date("2024-09-26T18:00:00Z");
-        const targetIdx = rrqpeData.findIndex(d => new Date(d.datetime) >= targetDate);
+        const targetIdx = rrqpeData.findIndex(
+          (d) => new Date(d.datetime) >= targetDate
+        );
         if (targetIdx !== -1 && currFrameidx !== targetIdx) {
           onFrameChange(targetIdx);
         }
-
-        const targetScale = width * 2;
-        const targetRotate = [82, -28];
-
-        d3.transition()
-          .duration(800)
-          .tween("rotate", () => {
-            const r = d3.interpolate(projection.rotate(), targetRotate);
-            const s = d3.interpolate(projection.scale(), targetScale);
-            return (t) => {
-              projection.rotate(r(t));
-              projection.scale(s(t));
-              currentScale = s(t);
-              redraw();
-              updateGlobeVisuals();
-            };
-          });
       } else {
         svg.selectAll(".region-marker").remove();
       }
@@ -946,37 +1222,11 @@ function initScrollytelling(numFrames) {
         currTrackPrediction = null;
         prevTrackPrediction = null;
         canPredict = false;
+        expertPts.length = 0;
+        trueTrackPts.length = 0;
+        predictionPts.length = 0;
+        d3.select("#track-color-legend").classed("hidden", true);
       }
-      if (step === "scene6") {
-        interactionMode = "guess-track";
-        canPredict = true;
-        if (scrollDirection > 0) {
-          initTrackInteraction();
-        }
-      }
-
-      if (step === "scene7") {
-        interactionMode = "guess-track";
-        canPredict = true;
-        if (scrollDirection > 0) {
-          initTrackInteraction();
-        }
-      }
-
-      if (step === "scene8") {
-        interactionMode = "guess-track";
-        canPredict = true;
-        if (scrollDirection > 0) {
-          initTrackInteraction();
-        }
-      }
-
-      if (step === "scene9") {
-        if (scrollDirection > 0) {
-          initTrackInteraction();
-        }
-      }
-
       if (behavior === "guess-intensity") {
         interactionMode = "guess-intensity";
       } else if (behavior === "guess-track") {
@@ -984,7 +1234,18 @@ function initScrollytelling(numFrames) {
         d3.select("#globe-container").classed("cursor-crosshair", true);
       }
 
-      if (step === "scene2" || step === "scene6") {
+      if (
+        step === "scene2" ||
+        step === "scene3" ||
+        step === "scene4" ||
+        step === "scene5" ||
+        step === "scene13" ||
+        step === "scene14" ||
+        step === "scene15" ||
+        step === "scene16" ||
+        step === "scene17"
+      ) {
+        // close up camera
         d3.select("#controls-container").classed("hidden", false);
         const targetScale = width * 1.2;
         const targetRotate = [80, -30.5];
@@ -1005,14 +1266,72 @@ function initScrollytelling(numFrames) {
             };
           });
       } else if (
+        step === "scene6" ||
+        step === "scene7" ||
+        step === "scene8" ||
+        step === "scene9"
+      ) {
+        // track camera
+        d3.select("#controls-container").classed("hidden", false);
+        const targetScale = width * 1.4;
+        const targetRotate = [80, -26.5];
+        const targetTranslate = [width / 2, height / 2 - height * 0.15];
+
+        d3.transition()
+          .duration(200)
+          .tween("rotate", () => {
+            const r = d3.interpolate(projection.rotate(), targetRotate);
+            const s = d3.interpolate(projection.scale(), targetScale);
+            const tr = d3.interpolate(projection.translate(), targetTranslate);
+            return (t) => {
+              projection.rotate(r(t));
+              projection.scale(s(t));
+              projection.translate(tr(t));
+              currentScale = s(t);
+              redraw();
+            };
+          });
+        if (step === "scene6") {
+          interactionMode = "guess-track";
+          canPredict = true;
+          trackColorLegend();
+          if (scrollDirection > 0) {
+            setTimeout(initTrackInteraction, 500);
+          }
+        }
+
+        if (step === "scene7") {
+          interactionMode = "guess-track";
+          canPredict = true;
+          if (scrollDirection > 0) {
+            initTrackInteraction();
+          }
+        }
+
+        if (step === "scene8") {
+          interactionMode = "guess-track";
+          canPredict = true;
+          if (scrollDirection > 0) {
+            initTrackInteraction();
+          }
+        }
+
+        if (step === "scene9") {
+          if (scrollDirection > 0) {
+            initTrackInteraction();
+            showExpertPrediction();
+            displayTrackScore();
+          }
+        }
+      } else if (
         step === "scene1" ||
         step === "spacer1" ||
-        step === "scene13" ||
         step === "scene14" ||
         step === "scene15" ||
         step === "scene16" ||
         step === "scene17"
       ) {
+        // default camera
         const targetScale = width * 0.2;
         const targetRotate = [80, 0];
         const targetTranslate = [width / 2, height / 2];
@@ -1040,6 +1359,30 @@ function initScrollytelling(numFrames) {
               projection.translate(tr(t));
               currentScale = s(t);
               redraw();
+            };
+          });
+      } else if (
+        // game camera
+        step === "scene10" ||
+        step == "scene11" ||
+        step === "scene12" ||
+        step === "scene13"
+      ) {
+        d3.select("#controls-container").classed("hidden", false);
+        const targetScale = width * 2;
+        const targetRotate = [82, -28];
+
+        d3.transition()
+          .duration(800)
+          .tween("rotate", () => {
+            const r = d3.interpolate(projection.rotate(), targetRotate);
+            const s = d3.interpolate(projection.scale(), targetScale);
+            return (t) => {
+              projection.rotate(r(t));
+              projection.scale(s(t));
+              currentScale = s(t);
+              redraw();
+              updateGlobeVisuals();
             };
           });
       }
@@ -1189,17 +1532,22 @@ function onFrameChange(idx) {
 async function init() {
   const overlay = document.getElementById("loading-overlay");
 
-  const [world, rrqpe6hr, rrqpeHourly, dmwDataRaw] = await Promise.all([
-    d3.json(
-      "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json"
-    ),
-    preload6hrRRQPE(),
-    loadDailyRRQPE(),
-    loadDMWData(),
-  ]);
+  const [world, rrqpe6hr, rrqpeHourly, dmwDataRaw, track, prediction] =
+    await Promise.all([
+      d3.json(
+        "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json"
+      ),
+      preload6hrRRQPE(),
+      loadDailyRRQPE(),
+      loadDMWData(),
+      loadHeleneTrack(),
+      loadExpertPrediction(),
+    ]);
 
   n6hrFrames = rrqpe6hr.length;
   rrqpeHelene = rrqpeHourly;
+  officalTrackHelene = track;
+  trackPrediction = prediction;
   const rrqpe = [...rrqpe6hr, ...rrqpeHourly];
 
   rrqpeMax = d3.max(rrqpe, (d) => d3.max(d.vals));
@@ -1249,7 +1597,9 @@ async function init() {
 
   continueBtn.addEventListener("click", () => {
     overlay.classList.add("hidden");
-    document.querySelectorAll(".hint").forEach(el => el.classList.add("animate"));
+    document
+      .querySelectorAll(".hint")
+      .forEach((el) => el.classList.add("animate"));
   });
 
   redraw();
